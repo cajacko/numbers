@@ -38,7 +38,7 @@ const descriptions: {
         randomAvailablePosition: [3, 3],
         prevTiles: [
           {
-            tileId: 1,
+            tileId: 0,
             value: 2,
             row: 1,
             column: 0,
@@ -47,13 +47,13 @@ const descriptions: {
         applyAction: "up",
         expectedPositions: [
           {
-            tileId: 1,
+            tileId: 0,
             value: 2,
             row: 0,
             column: 0,
           },
           {
-            tileId: 2,
+            tileId: 1,
             value: 2,
             row: 3,
             column: 3,
@@ -66,7 +66,7 @@ const descriptions: {
         randomAvailablePosition: [3, 3],
         prevTiles: [
           {
-            tileId: 1,
+            tileId: 0,
             value: 2,
             row: 2,
             column: 0,
@@ -75,13 +75,13 @@ const descriptions: {
         applyAction: "up",
         expectedPositions: [
           {
-            tileId: 1,
+            tileId: 0,
             value: 2,
             row: 0,
             column: 0,
           },
           {
-            tileId: 2,
+            tileId: 1,
             value: 2,
             row: 3,
             column: 3,
@@ -94,13 +94,13 @@ const descriptions: {
         randomAvailablePosition: [3, 3],
         prevTiles: [
           {
-            tileId: 1,
+            tileId: 0,
             value: 2,
             row: 0,
             column: 0,
           },
           {
-            tileId: 2,
+            tileId: 1,
             value: 2,
             row: 1,
             column: 0,
@@ -109,13 +109,13 @@ const descriptions: {
         applyAction: "up",
         expectedPositions: [
           {
-            tileId: 1,
+            tileId: 0,
             value: 4,
             row: 0,
             column: 0,
           },
           {
-            tileId: 3,
+            tileId: 2,
             value: 2,
             row: 3,
             column: 3,
@@ -128,13 +128,13 @@ const descriptions: {
         randomAvailablePosition: [3, 3],
         prevTiles: [
           {
-            tileId: 1,
+            tileId: 0,
             value: 2,
             row: 0,
             column: 0,
           },
           {
-            tileId: 2,
+            tileId: 1,
             value: 2,
             row: 2,
             column: 0,
@@ -143,13 +143,13 @@ const descriptions: {
         applyAction: "up",
         expectedPositions: [
           {
-            tileId: 1,
+            tileId: 0,
             value: 4,
             row: 0,
             column: 0,
           },
           {
-            tileId: 3,
+            tileId: 2,
             value: 2,
             row: 3,
             column: 3,
@@ -162,8 +162,29 @@ const descriptions: {
         randomAvailablePosition: [3, 3],
         prevTiles: [
           {
+            tileId: 0,
+            value: 2,
+            row: 0,
+            column: 0,
+          },
+          {
             tileId: 1,
             value: 2,
+            row: 1,
+            column: 0,
+          },
+          {
+            tileId: 2,
+            value: 2,
+            row: 2,
+            column: 0,
+          },
+        ],
+        applyAction: "up",
+        expectedPositions: [
+          {
+            tileId: 0,
+            value: 4,
             row: 0,
             column: 0,
           },
@@ -175,27 +196,6 @@ const descriptions: {
           },
           {
             tileId: 3,
-            value: 2,
-            row: 2,
-            column: 0,
-          },
-        ],
-        applyAction: "up",
-        expectedPositions: [
-          {
-            tileId: 1,
-            value: 4,
-            row: 0,
-            column: 0,
-          },
-          {
-            tileId: 3,
-            value: 2,
-            row: 1,
-            column: 0,
-          },
-          {
-            tileId: 4,
             value: 2,
             row: 3,
             column: 3,
@@ -213,7 +213,7 @@ const descriptions: {
         randomAvailablePosition: [0, 0],
         prevTiles: [
           {
-            tileId: 1,
+            tileId: 0,
             value: 2,
             row: 0,
             column: 1,
@@ -222,13 +222,13 @@ const descriptions: {
         applyAction: "down",
         expectedPositions: [
           {
-            tileId: 1,
+            tileId: 0,
             value: 2,
             row: 3,
             column: 1,
           },
           {
-            tileId: 2,
+            tileId: 1,
             value: 2,
             row: 0,
             column: 0,
@@ -245,13 +245,13 @@ const descriptions: {
         gridSize: { rows: 4, columns: 4 },
         randomAvailablePosition: [1, 3],
         prevTiles: [
-          { tileId: 1, value: 2, row: 0, column: 2 },
-          { tileId: 2, value: 2, row: 0, column: 3 },
+          { tileId: 0, value: 2, row: 0, column: 2 },
+          { tileId: 1, value: 2, row: 0, column: 3 },
         ],
         applyAction: "left",
         expectedPositions: [
-          { tileId: 1, value: 4, row: 0, column: 0 },
-          { tileId: 3, value: 2, row: 1, column: 3 },
+          { tileId: 0, value: 4, row: 0, column: 0 },
+          { tileId: 2, value: 2, row: 1, column: 3 },
         ],
       },
     ],
@@ -264,13 +264,13 @@ const descriptions: {
         gridSize: { rows: 4, columns: 4 },
         randomAvailablePosition: [0, 0],
         prevTiles: [
-          { tileId: 1, value: 2, row: 0, column: 3 },
-          { tileId: 2, value: 4, row: 1, column: 3 },
+          { tileId: 0, value: 2, row: 0, column: 3 },
+          { tileId: 1, value: 4, row: 1, column: 3 },
         ],
         applyAction: "right",
         expectedPositions: [
-          { tileId: 1, value: 2, row: 0, column: 3 },
-          { tileId: 2, value: 4, row: 1, column: 3 },
+          { tileId: 0, value: 2, row: 0, column: 3 },
+          { tileId: 1, value: 4, row: 1, column: 3 },
         ],
       },
     ],

@@ -11,7 +11,7 @@ export default function getFreeTileId(state: Types.GameState): Types.TileId {
     }
   });
 
-  let newId = 1;
+  let newId = 0;
 
   while (usedIds.includes(newId)) {
     newId++;

@@ -184,6 +184,9 @@ export function GameProvider(props: { children: React.ReactNode }) {
       }
 
       const diffs = getGameStateDiffs(currentState.current, nextState);
+
+      console.log("Game diffs", diffs);
+
       const newTileStates: Record<
         GameTypes.TileId,
         TileAnimatingState | undefined
@@ -238,6 +241,8 @@ export function GameProvider(props: { children: React.ReactNode }) {
             };
 
             mergedFromTileIds.forEach((tileId) => {
+              if (tileId === mergedToTileId) return;
+
               const tile = getTile(tileId);
 
               if (!tile) return;
@@ -249,7 +254,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
                 position: mergedToTile.position,
                 scalePop: false,
                 collapsing:
-                  direction === "up" || direction === "down" ? "x" : "y",
+                  direction === "up" || direction === "down" ? "y" : "x",
               };
             });
 

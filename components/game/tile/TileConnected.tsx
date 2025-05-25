@@ -24,6 +24,8 @@ export interface TileConnectedProps {
   size: SharedValue<number>;
 }
 
+const logUpTo = -1;
+
 export default React.memo(function TileConnected({
   id,
   size,
@@ -34,10 +36,20 @@ export default React.memo(function TileConnected({
   const currentState = useSharedValue<TileState | null>(initialState);
   const nextState = useSharedValue<TileAnimatingState | null>(null);
 
+  React.useEffect(() => {
+    if (id <= logUpTo) {
+      console.log(`Tile ${id} init`, currentState.value, nextState.value);
+    }
+  }, []);
+
   useSubscribeToTile(
     id,
     React.useCallback<TileSubscriber>(
       (_currentState, _nextState) => {
+        if (id <= logUpTo) {
+          console.log(`Tile ${id} update`, _currentState, _nextState);
+        }
+
         currentState.value = _currentState;
         nextState.value = _nextState;
       },
@@ -127,8 +139,11 @@ export default React.memo(function TileConnected({
       return size.value * state.position[1];
     }
 
-    if (currentState.value && animationProgress.value === 0) {
-      // Initial state, no animation
+    if (
+      currentState.value &&
+      (animationProgress.value === 0 || !nextState.value)
+    ) {
+      // Initial state, or no nextState
       top = topFromState(currentState.value);
       left = leftFromState(currentState.value);
       opacity = 1;
