@@ -1,4 +1,4 @@
-import GameState from "@/components/game/GameState";
+import GameState from "@/components/game/Game";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import {
   DarkTheme,

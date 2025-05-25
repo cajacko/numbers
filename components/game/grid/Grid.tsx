@@ -1,28 +1,22 @@
+import TileConnected from "@/components/game/tile/TileConnected";
+import * as GameTypes from "@/game/Game.types";
 import React from "react";
 import { StyleSheet, View, ViewProps } from "react-native";
 import { GestureDetector, GestureType } from "react-native-gesture-handler";
-import { SharedValue, useSharedValue } from "react-native-reanimated";
-import BlockCalc from "./BlockCalc";
-import { GameState } from "./Game.types";
+import { useSharedValue } from "react-native-reanimated";
 
 export interface GridProps {
   rows: number;
   columns: number;
-  progress: SharedValue<number>;
-  prevState: SharedValue<GameState>;
-  nextState: SharedValue<GameState | null>;
-  blockIds: string[];
   gesture: GestureType;
+  tileIds: GameTypes.TileId[];
 }
 
-export default function Grid({
+export default React.memo(function Grid({
   columns,
   rows,
-  progress,
-  prevState,
-  nextState,
-  blockIds,
   gesture,
+  tileIds,
 }: GridProps): React.ReactNode {
   const [ready, setReady] = React.useState(false);
 
@@ -75,20 +69,13 @@ export default function Grid({
           </View>
         ))}
         {ready &&
-          blockIds.map((blockId) => (
-            <BlockCalc
-              key={`tile-${blockId}`}
-              blockId={blockId}
-              size={size}
-              progress={progress}
-              nextState={nextState}
-              prevState={prevState}
-            />
+          tileIds.map((tileId) => (
+            <TileConnected key={`tile-${tileId}`} id={tileId} size={size} />
           ))}
       </View>
     </GestureDetector>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {
