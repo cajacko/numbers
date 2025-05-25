@@ -1,8 +1,9 @@
 import * as Haptics from "expo-haptics";
 import React from "react";
+import flags from "@/constants/flags";
 
 export default function useVibrate() {
-  const canVibrate = true;
+  const canVibrate = flags.vibrate;
 
   let lastVibrated = React.useRef<Date | null>(null);
   let vibrateTimeout = React.useRef<ReturnType<typeof setTimeout> | null>(null);
