@@ -6,6 +6,7 @@ import Animated, {
   SharedValue,
   useAnimatedStyle,
 } from "react-native-reanimated";
+import flags from "@/constants/flags";
 
 export interface TileProps {
   height: SharedValue<number>;
@@ -50,7 +51,7 @@ export default React.memo(function Tile({
       <Animated.View style={wrapperStyle}>
         <Number value={value} color={textColor} />
       </Animated.View>
-      {!!id && <Text style={styles.id}>{id}</Text>}
+      {!!id && flags.showTileIds && <Text style={styles.id}>{id}</Text>}
     </Animated.View>
   );
 });

@@ -25,6 +25,8 @@ export interface TileConnectedProps {
   size: SharedValue<number>;
 }
 
+const staticUpdatePoint = 0.5;
+
 export default React.memo(function TileConnected({
   id,
   size,
@@ -50,12 +52,18 @@ export default React.memo(function TileConnected({
     const currentValue = currentState.value?.value ?? null;
     const nextValue = nextState.value?.value ?? null;
 
-    if (currentValue !== null && nextValue !== null && flags.animateNumbers) {
-      return interpolate(
-        animationProgress.value,
-        [0, 1],
-        [currentValue, nextValue]
-      );
+    if (currentValue !== null && nextValue !== null) {
+      if (flags.animateNumbers) {
+        return interpolate(
+          animationProgress.value,
+          [0, 1],
+          [currentValue, nextValue]
+        );
+      }
+
+      return animationProgress.value < staticUpdatePoint
+        ? currentValue
+        : nextValue;
     }
 
     if (currentValue !== null) {
@@ -69,12 +77,18 @@ export default React.memo(function TileConnected({
     const currentValue = currentState.value?.backgroundColor;
     const nextValue = nextState.value?.backgroundColor;
 
-    if (currentValue && nextValue && flags.animateTileColors) {
-      return interpolateColor(
-        animationProgress.value,
-        [0, 1],
-        [currentValue, nextValue]
-      );
+    if (currentValue && nextValue) {
+      if (flags.animateTileColors) {
+        return interpolateColor(
+          animationProgress.value,
+          [0, 1],
+          [currentValue, nextValue]
+        );
+      }
+
+      return animationProgress.value < staticUpdatePoint
+        ? currentValue
+        : nextValue;
     }
 
     if (currentValue) {
@@ -92,12 +106,18 @@ export default React.memo(function TileConnected({
     const currentValue = currentState.value?.textColor;
     const nextValue = nextState.value?.textColor;
 
-    if (currentValue && nextValue && flags.animateTileColors) {
-      return interpolateColor(
-        animationProgress.value,
-        [0, 1],
-        [currentValue, nextValue]
-      );
+    if (currentValue && nextValue) {
+      if (flags.animateTileColors) {
+        return interpolateColor(
+          animationProgress.value,
+          [0, 1],
+          [currentValue, nextValue]
+        );
+      }
+
+      return animationProgress.value < staticUpdatePoint
+        ? currentValue
+        : nextValue;
     }
 
     if (currentValue) {
