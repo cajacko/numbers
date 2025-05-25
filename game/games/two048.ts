@@ -73,24 +73,39 @@ const getInitState: Types.GetInitState = ({ rand, gridSize }) => {
 
 const applyMove: Types.ApplyMove = ({ state, direction, gridSize, rand }) => {
   let nextState: Types.GameState | null = {
-    ...state,
-    tiles: [
-      {
-        id: 2,
-        position: [0, 0],
-        value: 4,
-        mergedFrom: [1],
-        ...getColorsFromValue(4),
-      },
-    ],
+    tiles: state.tiles.map((tile): Types.Tile => {
+      switch (direction) {
+        case "up":
+          return {
+            ...tile,
+            position: [Math.max(tile.position[0] - 1, 0), tile.position[1]],
+          };
+        case "down":
+          return {
+            ...tile,
+            position: [
+              Math.min(tile.position[0] + 1, gridSize.rows - 1),
+              tile.position[1],
+            ],
+          };
+        case "left":
+          return {
+            ...tile,
+            position: [tile.position[0], Math.max(tile.position[1] - 1, 0)],
+          };
+        case "right":
+          return {
+            ...tile,
+            position: [
+              tile.position[0],
+              Math.min(tile.position[1] + 1, gridSize.columns - 1),
+            ],
+          };
+      }
+    }),
+    score: 0,
+    state: "playing",
   };
-
-  if (!nextState) {
-    return {
-      ...state,
-      state: "lost",
-    };
-  }
 
   nextState = spawnTile({
     gridSize,
@@ -110,59 +125,6 @@ const applyMove: Types.ApplyMove = ({ state, direction, gridSize, rand }) => {
   }
 
   return nextState;
-
-  // let nextState: Types.GameState | null = {
-  //   tiles: state.tiles.map((tile): Types.Tile => {
-  //     switch (direction) {
-  //       case "up":
-  //         return {
-  //           ...tile,
-  //           position: [Math.max(tile.position[0] - 1, 0), tile.position[1]],
-  //         };
-  //       case "down":
-  //         return {
-  //           ...tile,
-  //           position: [
-  //             Math.min(tile.position[0] + 1, gridSize.rows - 1),
-  //             tile.position[1],
-  //           ],
-  //         };
-  //       case "left":
-  //         return {
-  //           ...tile,
-  //           position: [tile.position[0], Math.max(tile.position[1] - 1, 0)],
-  //         };
-  //       case "right":
-  //         return {
-  //           ...tile,
-  //           position: [
-  //             tile.position[0],
-  //             Math.min(tile.position[1] + 1, gridSize.columns - 1),
-  //           ],
-  //         };
-  //     }
-  //   }),
-  //   score: 0,
-  //   state: "playing",
-  // };
-
-  // nextState = spawnTile({
-  //   gridSize,
-  //   rand,
-  //   state: nextState,
-  //   tile: {
-  //     value: 2,
-  //   },
-  // });
-
-  // if (!nextState) {
-  //   return {
-  //     ...state,
-  //     state: "lost",
-  //   };
-  // }
-
-  // return nextState;
 };
 
 const gameConfig: Types.GameConfig = {
@@ -170,8 +132,8 @@ const gameConfig: Types.GameConfig = {
   getInitState,
   applyMove,
   defaultGridSize: {
-    rows: 2,
-    columns: 2,
+    rows: 4,
+    columns: 4,
   },
 };
 

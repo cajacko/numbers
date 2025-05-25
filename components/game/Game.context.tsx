@@ -1,6 +1,7 @@
 import * as GameTypes from "@/game/Game.types";
 import { defaultGame } from "@/game/games";
 import getGameStateDiffs from "@/game/utils/getGameStateDiffs";
+import useVibrate from "@/hooks/useVibrate";
 import withRand from "@/utils/withRand";
 import React from "react";
 import {
@@ -95,6 +96,7 @@ export function useGridSize() {
 }
 
 export function GameProvider(props: { children: React.ReactNode }) {
+  const { vibrate } = useVibrate();
   const [game] = React.useState<GameTypes.GameConfig>(defaultGame);
   const animationProgress = useSharedValue<number>(0);
 
@@ -150,6 +152,8 @@ export function GameProvider(props: { children: React.ReactNode }) {
 
   const handleAction = React.useCallback<GameContext["handleAction"]>(
     (direction) => {
+      vibrate?.();
+
       // Prevent action if animation is in progress
       if (animationProgress.value > 0 && animationProgress.value < 1) {
         pendingAction.current = direction;
