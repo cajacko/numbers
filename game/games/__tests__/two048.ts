@@ -90,6 +90,77 @@ const descriptions: {
       },
     ],
   },
+  {
+    title: "Down",
+    cases: [
+      {
+        title: "A single tile in row 0 moves to row 3",
+        gridSize: { rows: 4, columns: 4 },
+        randomAvailablePosition: [0, 0],
+        prevTiles: [
+          {
+            tileId: 1,
+            value: 2,
+            row: 0,
+            column: 1,
+          },
+        ],
+        applyAction: "down",
+        expectedPositions: [
+          {
+            tileId: 1,
+            value: 2,
+            row: 3,
+            column: 1,
+          },
+          {
+            tileId: 2,
+            value: 2,
+            row: 0,
+            column: 0,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    title: "Left",
+    cases: [
+      {
+        title: "Two tiles merge when moved left",
+        gridSize: { rows: 4, columns: 4 },
+        randomAvailablePosition: [1, 3],
+        prevTiles: [
+          { tileId: 1, value: 2, row: 0, column: 2 },
+          { tileId: 2, value: 2, row: 0, column: 3 },
+        ],
+        applyAction: "left",
+        expectedPositions: [
+          { tileId: 1, value: 4, row: 0, column: 0 },
+          { tileId: 3, value: 2, row: 1, column: 3 },
+        ],
+      },
+    ],
+  },
+  {
+    title: "Right",
+    cases: [
+      {
+        title: "No new tile spawns when no tiles move",
+        gridSize: { rows: 4, columns: 4 },
+        randomAvailablePosition: [0, 0],
+        prevTiles: [
+          { tileId: 1, value: 2, row: 0, column: 3 },
+          { tileId: 2, value: 4, row: 1, column: 3 },
+        ],
+        applyAction: "right",
+        expectedPositions: [
+          { tileId: 1, value: 2, row: 0, column: 3 },
+          { tileId: 2, value: 4, row: 1, column: 3 },
+        ],
+      },
+    ],
+  },
 ];
 
 function stateFromTilePositions(positions: TilePosition[]): Types.GameState {
