@@ -4,12 +4,14 @@ import React from "react";
 import { StyleSheet } from "react-native";
 import {
   interpolate,
+  interpolateColor,
   SharedValue,
   useAnimatedStyle,
   useDerivedValue,
   useSharedValue,
 } from "react-native-reanimated";
 import {
+  TileAnimatingState,
   TileState,
   TileSubscriber,
   useAnimationProgress,
@@ -29,8 +31,8 @@ export default React.memo(function TileConnected({
   const initialState = useTileInitialState(id);
   const animationProgress = useAnimationProgress();
 
-  const currentState = useSharedValue<TileState>(initialState);
-  const nextState = useSharedValue<TileState | null>(null);
+  const currentState = useSharedValue<TileState | null>(initialState);
+  const nextState = useSharedValue<TileAnimatingState | null>(null);
 
   useSubscribeToTile(
     id,
@@ -64,6 +66,52 @@ export default React.memo(function TileConnected({
     return nextValue;
   });
 
+  const backgroundColor = useDerivedValue<string | null>(() => {
+    const currentValue = currentState.value?.backgroundColor;
+    const nextValue = nextState.value?.backgroundColor;
+
+    if (currentValue && nextValue) {
+      return interpolateColor(
+        animationProgress.value,
+        [0, 1],
+        [currentValue, nextValue]
+      );
+    }
+
+    if (currentValue) {
+      return currentValue;
+    }
+
+    if (nextValue) {
+      return nextValue;
+    }
+
+    return null;
+  });
+
+  const textColor = useDerivedValue<string | null>(() => {
+    const currentValue = currentState.value?.textColor;
+    const nextValue = nextState.value?.textColor;
+
+    if (currentValue && nextValue) {
+      return interpolateColor(
+        animationProgress.value,
+        [0, 1],
+        [currentValue, nextValue]
+      );
+    }
+
+    if (currentValue) {
+      return currentValue;
+    }
+
+    if (nextValue) {
+      return nextValue;
+    }
+
+    return null;
+  });
+
   const animatedStyle = useAnimatedStyle(() => {
     let top: number;
     let left: number;
@@ -85,14 +133,14 @@ export default React.memo(function TileConnected({
       left = leftFromState(currentState.value);
       opacity = 1;
       scaleX = 1;
-      scaleY = 1;
+      scaleY = scaleX;
     } else if (nextState.value && animationProgress.value === 1) {
       // Finished Animating
       top = topFromState(nextState.value);
       left = leftFromState(nextState.value);
       opacity = 1;
       scaleX = 1;
-      scaleY = 1;
+      scaleY = scaleX;
     } else if (currentState.value && nextState.value) {
       // Moving and/or merging
       top = interpolate(
@@ -105,22 +153,46 @@ export default React.memo(function TileConnected({
         [0, 1],
         [leftFromState(currentState.value), leftFromState(nextState.value)]
       );
-      opacity = 1;
-      scaleX = 1;
-      scaleY = 1;
+
+      if (nextState.value.collapsing) {
+        // We are merging
+        if (nextState.value.collapsing === "x") {
+          scaleY = 1;
+          scaleX = interpolate(animationProgress.value, [0, 1], [1, 0]);
+        } else {
+          scaleY = interpolate(animationProgress.value, [0, 1], [1, 0]);
+          scaleX = 1;
+        }
+
+        opacity = interpolate(animationProgress.value, [0, 1], [1, 0]);
+      } else if (nextState.value.scalePop) {
+        // This tile is consuming some other tiles so pop it
+        opacity = 1;
+        scaleX = interpolate(
+          animationProgress.value,
+          [0, 0.25, 0.75, 1],
+          [1, 0.95, 1.01, 1]
+        );
+        scaleY = scaleX;
+      } else {
+        // Just moving
+        opacity = 1;
+        scaleX = 1;
+        scaleY = 1;
+      }
     } else if (nextState.value && !currentState.value) {
       // Spawning a new tile
       top = topFromState(nextState.value);
       left = leftFromState(nextState.value);
       opacity = 1;
       scaleX = animationProgress.value;
-      scaleY = animationProgress.value;
+      scaleY = scaleX;
     } else {
       top = -9999;
       left = -9999;
       opacity = 0;
       scaleX = 0;
-      scaleY = 0;
+      scaleY = scaleX;
     }
 
     return {
@@ -137,7 +209,15 @@ export default React.memo(function TileConnected({
   );
 
   return (
-    <Tile value={value} style={style} height={size} width={size} id={id} />
+    <Tile
+      value={value}
+      style={style}
+      height={size}
+      width={size}
+      id={id}
+      backgroundColor={backgroundColor}
+      textColor={textColor}
+    />
   );
 });
 

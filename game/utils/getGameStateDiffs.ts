@@ -1,14 +1,6 @@
 import * as Types from "@/game/Game.types";
-
-function createTileMap(tiles: Types.Tile[]): Record<Types.TileId, Types.Tile> {
-  const map: Record<Types.TileId, Types.Tile> = {};
-
-  for (const tile of tiles) {
-    map[tile.id] = tile;
-  }
-
-  return map;
-}
+import createTileMap from "@/game/utils/createTileMap";
+import isEqual from "lodash/isEqual";
 
 export default function getGameStateDiffs(
   prevState: Types.GameState,
@@ -17,13 +9,12 @@ export default function getGameStateDiffs(
   const diffs: Types.Diff[] = [];
 
   const prevTilesMap = createTileMap(prevState.tiles);
-  const nextTilesMap = createTileMap(nextState.tiles);
 
   // Check for moved tiles
   for (const nextTile of nextState.tiles) {
     const prevTile = prevTilesMap[nextTile.id];
 
-    if (prevTile && prevTile.position !== nextTile.position) {
+    if (prevTile && !isEqual(prevTile.position, nextTile.position)) {
       diffs.push({
         type: "move",
         payload: {
@@ -39,22 +30,18 @@ export default function getGameStateDiffs(
   for (const nextTile of nextState.tiles) {
     const prevTile = prevTilesMap[nextTile.id];
 
-    if (prevTile && prevTile.value !== nextTile.value) {
-      const mergedFromTileIds = Object.keys(prevTilesMap)
-        .filter((id) => prevTilesMap[parseInt(id)].value === nextTile.value / 2)
-        .map((id) => parseInt(id));
-
-      if (mergedFromTileIds.length > 0) {
-        diffs.push({
-          type: "merge",
-          payload: {
-            mergedToTileId: nextTile.id,
-            mergedFromTileIds,
-            newValue: nextTile.value,
-            prevValue: prevTile.value,
-          },
-        });
-      }
+    if (nextTile.mergedFrom && nextTile.mergedFrom.length > 0) {
+      diffs.push({
+        type: "merge",
+        payload: {
+          mergedToTileId: nextTile.id,
+          mergedFromTileIds: nextTile.mergedFrom,
+          newValue: nextTile.value,
+          prevValue: prevTile.value,
+          mergedToTileBackgroundColor: nextTile.backgroundColor,
+          mergedToTileTextColor: nextTile.textColor,
+        },
+      });
     }
   }
 
@@ -67,6 +54,8 @@ export default function getGameStateDiffs(
           tileId: nextTile.id,
           position: nextTile.position,
           value: nextTile.value,
+          backgroundColor: nextTile.backgroundColor,
+          textColor: nextTile.textColor,
         },
       });
     }

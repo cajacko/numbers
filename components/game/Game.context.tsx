@@ -1,7 +1,7 @@
 import * as GameTypes from "@/game/Game.types";
 import { defaultGame } from "@/game/games";
 import getGameStateDiffs from "@/game/utils/getGameStateDiffs";
-import withRand, { generateSeed } from "@/utils/withRand";
+import withRand from "@/utils/withRand";
 import React from "react";
 import {
   runOnJS,
@@ -11,21 +11,30 @@ import {
   withTiming,
 } from "react-native-reanimated";
 
+const duration = 250;
+
 export type TileState = {
   position: GameTypes.Position;
   value: GameTypes.Value;
-  mergedFrom: GameTypes.Direction | null;
-} | null;
+  textColor: string;
+  backgroundColor: string;
+  // mergedFrom: GameTypes.Direction | null;
+};
+
+export type TileAnimatingState = TileState & {
+  collapsing: "x" | "y" | null;
+  scalePop: boolean;
+};
 
 export type TileSubscriber = (
-  currentState: TileState,
-  nextState: TileState
+  currentState: TileState | null,
+  nextState: TileAnimatingState | null
 ) => void;
 
 type GameContext = {
   animationProgress: SharedValue<number>;
   game: GameTypes.GameConfig;
-  getTile: (tileId: GameTypes.TileId) => TileState;
+  getTile: (tileId: GameTypes.TileId) => TileState | null;
   subscribeToTile: (
     tileId: GameTypes.TileId,
     callback: TileSubscriber
@@ -89,10 +98,10 @@ export function GameProvider(props: { children: React.ReactNode }) {
   const [game] = React.useState<GameTypes.GameConfig>(defaultGame);
   const animationProgress = useSharedValue<number>(0);
 
-  const rand = React.useMemo(() => withRand(generateSeed()), []);
+  const rand = React.useMemo(() => withRand("1234567"), []);
 
-  const columns = 4;
-  const rows = 4;
+  const columns = game.defaultGridSize.columns;
+  const rows = game.defaultGridSize.rows;
 
   const callbacks = React.useRef<Record<GameTypes.TileId, TileSubscriber>>({});
 
@@ -109,6 +118,8 @@ export function GameProvider(props: { children: React.ReactNode }) {
       mergedFrom: null,
       position: tile.position,
       value: tile.value,
+      backgroundColor: tile.backgroundColor,
+      textColor: tile.textColor,
     };
   }, []);
 
@@ -169,8 +180,10 @@ export function GameProvider(props: { children: React.ReactNode }) {
       }
 
       const diffs = getGameStateDiffs(currentState.current, nextState);
-
-      const newTileStates: Record<GameTypes.TileId, TileState | undefined> = {};
+      const newTileStates: Record<
+        GameTypes.TileId,
+        TileAnimatingState | undefined
+      > = {};
 
       diffs.forEach((diff) => {
         switch (diff.type) {
@@ -183,11 +196,13 @@ export function GameProvider(props: { children: React.ReactNode }) {
               break;
             }
 
-            const newStileState: TileState = {
+            const newStileState: TileAnimatingState = {
               value: tile.value,
-              mergedFrom: null,
-              ...newTileStates[tileId],
+              backgroundColor: tile.backgroundColor,
+              textColor: tile.textColor,
               position: toPosition,
+              collapsing: null,
+              scalePop: false,
             };
 
             newTileStates[tileId] = newStileState;
@@ -195,17 +210,58 @@ export function GameProvider(props: { children: React.ReactNode }) {
             break;
           }
           case "merge": {
-            const { mergedToTileId, mergedFromTileIds, newValue } =
-              diff.payload;
+            const {
+              mergedToTileId,
+              mergedFromTileIds,
+              newValue,
+              mergedToTileBackgroundColor,
+              mergedToTileTextColor,
+            } = diff.payload;
+
+            const mergedToTile = getTile(mergedToTileId);
+
+            if (!mergedToTile) {
+              break;
+            }
+
+            newTileStates[mergedToTileId] = {
+              value: newValue,
+              backgroundColor: mergedToTileBackgroundColor,
+              textColor: mergedToTileTextColor,
+              position: mergedToTile.position,
+              collapsing: null,
+              scalePop: true,
+            };
+
+            mergedFromTileIds.forEach((tileId) => {
+              const tile = getTile(tileId);
+
+              if (!tile) return;
+
+              newTileStates[tileId] = {
+                value: tile.value,
+                backgroundColor: tile.backgroundColor,
+                textColor: tile.textColor,
+                position: mergedToTile.position,
+                scalePop: false,
+                collapsing:
+                  direction === "up" || direction === "down" ? "x" : "y",
+              };
+            });
+
             break;
           }
           case "spawn": {
-            const { tileId, position, value } = diff.payload;
+            const { tileId, position, value, backgroundColor, textColor } =
+              diff.payload;
 
             newTileStates[tileId] = {
               position,
               value,
-              mergedFrom: null,
+              collapsing: null,
+              scalePop: false,
+              backgroundColor,
+              textColor,
             };
 
             break;
@@ -223,11 +279,19 @@ export function GameProvider(props: { children: React.ReactNode }) {
         callback(getTile(tileId), nextTileState);
       });
 
-      animationProgress.value = withTiming(1, { duration: 300 }, () => {
+      animationProgress.value = withTiming(1, { duration }, () => {
         runOnJS(postAction)();
       });
     },
-    [game, getTile, animationProgress, rand, setAllToCurrentState]
+    [
+      game,
+      getTile,
+      animationProgress,
+      rand,
+      setAllToCurrentState,
+      rows,
+      columns,
+    ]
   );
 
   const reset = React.useCallback<GameContext["reset"]>(() => {
@@ -237,7 +301,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
     });
 
     setAllToCurrentState();
-  }, [game, rand, setAllToCurrentState]);
+  }, [game, rand, setAllToCurrentState, rows, columns]);
 
   const init = React.useRef(true);
 

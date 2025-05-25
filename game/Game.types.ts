@@ -9,6 +9,8 @@ export type Tile = {
   position: Position;
   value: Value;
   mergedFrom: number[] | null;
+  backgroundColor: string;
+  textColor: string;
 };
 
 export type GameState = {
@@ -60,12 +62,20 @@ export type DiffMerge = CreateDiffType<
     mergedFromTileIds: TileId[];
     prevValue: Value;
     newValue: Value;
+    mergedToTileBackgroundColor: string;
+    mergedToTileTextColor: string;
   }
 >;
 
 export type DiffSpawn = CreateDiffType<
   "spawn",
-  { tileId: TileId; position: Position; value: Value }
+  {
+    tileId: TileId;
+    position: Position;
+    value: Value;
+    backgroundColor: string;
+    textColor: string;
+  }
 >;
 
 export type Diff = DiffMove | DiffMerge | DiffSpawn;

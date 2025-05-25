@@ -1,7 +1,7 @@
 import Number from "@/components/game/Number";
 import * as GameTypes from "@/game/Game.types";
 import React from "react";
-import { StyleProp, StyleSheet, Text, View, ViewStyle } from "react-native";
+import { StyleProp, StyleSheet, Text, ViewStyle } from "react-native";
 import Animated, {
   SharedValue,
   useAnimatedStyle,
@@ -13,6 +13,8 @@ export interface TileProps {
   value: SharedValue<number | null>;
   style?: StyleProp<ViewStyle>;
   id: GameTypes.TileId;
+  textColor: SharedValue<string | null>;
+  backgroundColor: SharedValue<string | null>;
 }
 
 export default React.memo(function Tile({
@@ -21,10 +23,16 @@ export default React.memo(function Tile({
   height,
   width,
   id,
+  backgroundColor,
+  textColor,
 }: TileProps): React.ReactNode {
   const animatedStyle = useAnimatedStyle(() => ({
     height: height.value,
     width: width.value,
+  }));
+
+  const wrapperAnimatedStyle = useAnimatedStyle(() => ({
+    backgroundColor: backgroundColor.value ?? "#efe4da",
   }));
 
   const style = React.useMemo(
@@ -32,11 +40,16 @@ export default React.memo(function Tile({
     [animatedStyle, styleProp]
   );
 
+  const wrapperStyle = React.useMemo(
+    () => [styles.wrapper, wrapperAnimatedStyle],
+    [wrapperAnimatedStyle]
+  );
+
   return (
     <Animated.View style={style} id={`tile-${id}`}>
-      <View style={styles.wrapper}>
-        <Number value={value} />
-      </View>
+      <Animated.View style={wrapperStyle}>
+        <Number value={value} color={textColor} />
+      </Animated.View>
       {!!id && <Text style={styles.id}>{id}</Text>}
     </Animated.View>
   );

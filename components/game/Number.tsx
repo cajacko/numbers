@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import Animated, {
   SharedValue,
   useAnimatedStyle,
@@ -9,6 +9,7 @@ import Animated, {
 export interface NumberProps {
   value: SharedValue<number | null>;
   fontSize?: number;
+  color: SharedValue<string | null>;
 }
 
 const maxDigits = 2;
@@ -19,8 +20,10 @@ const Digit = React.memo(function Digit({
   reversedDigitIndex,
   fontSize,
   rounded = false,
+  color,
 }: {
   value: SharedValue<number | null>;
+  color: SharedValue<string | null>;
   /**
    * Is this the last number, the 10's digits the 100's? Done as an index. So:
    * 0 = 1's
@@ -86,12 +89,19 @@ const Digit = React.memo(function Digit({
     [animatedStyle, fontSize]
   );
 
+  const animatedTextStyle = useAnimatedStyle(() => ({
+    color: color.value ?? "#000",
+  }));
+
   const textStyle = React.useMemo(
-    () => ({
-      fontSize,
-      lineHeight: fontSize,
-    }),
-    [fontSize]
+    () => [
+      {
+        fontSize,
+        lineHeight: fontSize,
+      },
+      animatedTextStyle,
+    ],
+    [fontSize, animatedTextStyle]
   );
 
   const wrapperStyle = React.useMemo(
@@ -105,7 +115,7 @@ const Digit = React.memo(function Digit({
     <Animated.View style={style}>
       {zeroToNine.map((number, i) => (
         <View key={i} style={wrapperStyle}>
-          <Text style={textStyle}>{number}</Text>
+          <Animated.Text style={textStyle}>{number}</Animated.Text>
         </View>
       ))}
     </Animated.View>
@@ -117,6 +127,7 @@ const digitArray = new Array(maxDigits).fill(0);
 export default React.memo(function Numbers({
   value,
   fontSize = 30,
+  color,
 }: NumberProps): React.ReactNode {
   const style = React.useMemo(
     () => StyleSheet.flatten([styles.container, { height: fontSize }]),
@@ -134,6 +145,7 @@ export default React.memo(function Numbers({
             value={value}
             fontSize={fontSize}
             reversedDigitIndex={reversedDigitIndex}
+            color={color}
           />
         );
       })}
