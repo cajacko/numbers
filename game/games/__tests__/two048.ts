@@ -88,6 +88,120 @@ const descriptions: {
           },
         ],
       },
+      {
+        title: "Merging 2 tiles next to each other works",
+        gridSize: { rows: 4, columns: 4 },
+        randomAvailablePosition: [3, 3],
+        prevTiles: [
+          {
+            tileId: 1,
+            value: 2,
+            row: 0,
+            column: 0,
+          },
+          {
+            tileId: 2,
+            value: 2,
+            row: 1,
+            column: 0,
+          },
+        ],
+        applyAction: "up",
+        expectedPositions: [
+          {
+            tileId: 1,
+            value: 4,
+            row: 0,
+            column: 0,
+          },
+          {
+            tileId: 3,
+            value: 2,
+            row: 3,
+            column: 3,
+          },
+        ],
+      },
+      {
+        title: "Merging 2 tiles with a gap inbetween works",
+        gridSize: { rows: 4, columns: 4 },
+        randomAvailablePosition: [3, 3],
+        prevTiles: [
+          {
+            tileId: 1,
+            value: 2,
+            row: 0,
+            column: 0,
+          },
+          {
+            tileId: 2,
+            value: 2,
+            row: 2,
+            column: 0,
+          },
+        ],
+        applyAction: "up",
+        expectedPositions: [
+          {
+            tileId: 1,
+            value: 4,
+            row: 0,
+            column: 0,
+          },
+          {
+            tileId: 3,
+            value: 2,
+            row: 3,
+            column: 3,
+          },
+        ],
+      },
+      {
+        title: "3 same tiles merges the first 2 only",
+        gridSize: { rows: 4, columns: 4 },
+        randomAvailablePosition: [3, 3],
+        prevTiles: [
+          {
+            tileId: 1,
+            value: 2,
+            row: 0,
+            column: 0,
+          },
+          {
+            tileId: 2,
+            value: 2,
+            row: 1,
+            column: 0,
+          },
+          {
+            tileId: 3,
+            value: 2,
+            row: 2,
+            column: 0,
+          },
+        ],
+        applyAction: "up",
+        expectedPositions: [
+          {
+            tileId: 1,
+            value: 4,
+            row: 0,
+            column: 0,
+          },
+          {
+            tileId: 3,
+            value: 2,
+            row: 1,
+            column: 0,
+          },
+          {
+            tileId: 4,
+            value: 2,
+            row: 3,
+            column: 3,
+          },
+        ],
+      },
     ],
   },
   {
