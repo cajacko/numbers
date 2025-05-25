@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Numbers",
-    "slug": "Numbers",
+    "slug": "numbers",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -37,6 +37,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "4b9ac00b-c625-4696-bec5-ccaaf6b166a8"
+      }
+    },
+    "owner": "charliejackson"
   }
 }
