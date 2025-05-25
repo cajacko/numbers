@@ -18,13 +18,12 @@ import {
   useSubscribeToTile,
   useTileInitialState,
 } from "../Game.context";
+import flags from "@/constants/flags";
 
 export interface TileConnectedProps {
   id: GameTypes.TileId;
   size: SharedValue<number>;
 }
-
-const logUpTo = -1;
 
 export default React.memo(function TileConnected({
   id,
@@ -36,20 +35,10 @@ export default React.memo(function TileConnected({
   const currentState = useSharedValue<TileState | null>(initialState);
   const nextState = useSharedValue<TileAnimatingState | null>(null);
 
-  React.useEffect(() => {
-    if (id <= logUpTo) {
-      console.log(`Tile ${id} init`, currentState.value, nextState.value);
-    }
-  }, []);
-
   useSubscribeToTile(
     id,
     React.useCallback<TileSubscriber>(
       (_currentState, _nextState) => {
-        if (id <= logUpTo) {
-          console.log(`Tile ${id} update`, _currentState, _nextState);
-        }
-
         currentState.value = _currentState;
         nextState.value = _nextState;
       },
@@ -61,7 +50,7 @@ export default React.memo(function TileConnected({
     const currentValue = currentState.value?.value ?? null;
     const nextValue = nextState.value?.value ?? null;
 
-    if (currentValue !== null && nextValue !== null) {
+    if (currentValue !== null && nextValue !== null && flags.animateNumbers) {
       return interpolate(
         animationProgress.value,
         [0, 1],
@@ -73,8 +62,6 @@ export default React.memo(function TileConnected({
       return currentValue;
     }
 
-    // TODO: Is this correct?
-
     return nextValue;
   });
 
@@ -82,7 +69,7 @@ export default React.memo(function TileConnected({
     const currentValue = currentState.value?.backgroundColor;
     const nextValue = nextState.value?.backgroundColor;
 
-    if (currentValue && nextValue) {
+    if (currentValue && nextValue && flags.animateTileColors) {
       return interpolateColor(
         animationProgress.value,
         [0, 1],
@@ -105,7 +92,7 @@ export default React.memo(function TileConnected({
     const currentValue = currentState.value?.textColor;
     const nextValue = nextState.value?.textColor;
 
-    if (currentValue && nextValue) {
+    if (currentValue && nextValue && flags.animateTileColors) {
       return interpolateColor(
         animationProgress.value,
         [0, 1],

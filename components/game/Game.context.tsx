@@ -2,7 +2,7 @@ import * as GameTypes from "@/game/Game.types";
 import { defaultGame } from "@/game/games";
 import getGameStateDiffs from "@/game/utils/getGameStateDiffs";
 import useVibrate from "@/hooks/useVibrate";
-import withRand from "@/utils/withRand";
+import withRand, { generateSeed } from "@/utils/withRand";
 import React from "react";
 import {
   runOnJS,
@@ -100,7 +100,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
   const [game] = React.useState<GameTypes.GameConfig>(defaultGame);
   const animationProgress = useSharedValue<number>(0);
 
-  const rand = React.useMemo(() => withRand("1234567"), []);
+  const rand = React.useMemo(() => withRand(generateSeed()), []);
 
   const columns = game.defaultGridSize.columns;
   const rows = game.defaultGridSize.rows;
@@ -184,8 +184,6 @@ export function GameProvider(props: { children: React.ReactNode }) {
       }
 
       const diffs = getGameStateDiffs(currentState.current, nextState);
-
-      console.log("Game diffs", diffs);
 
       const newTileStates: Record<
         GameTypes.TileId,
