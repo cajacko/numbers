@@ -1,7 +1,7 @@
 import * as Types from "@/game/Game.types";
 import spawnTile from "@/game/utils/spawnTile";
 
-function getColorsFromValue(value: number): {
+export function getColorsFromValue(value: number): {
   backgroundColor: string;
   textColor: string;
 } {
