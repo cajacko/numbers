@@ -19,7 +19,6 @@ export type TileState = {
   value: GameTypes.Value;
   textColor: string;
   backgroundColor: string;
-  // mergedFrom: GameTypes.Direction | null;
 };
 
 export type TileAnimatingState = TileState & {
@@ -35,7 +34,10 @@ export type TileSubscriber = (
 type GameContext = {
   animationProgress: SharedValue<number>;
   game: GameTypes.GameConfig;
-  getTile: (tileId: GameTypes.TileId) => TileState | null;
+  getTile: (
+    tileId: GameTypes.TileId,
+    state?: GameTypes.GameState
+  ) => TileState | null;
   subscribeToTile: (
     tileId: GameTypes.TileId,
     callback: TileSubscriber
@@ -111,19 +113,22 @@ export function GameProvider(props: { children: React.ReactNode }) {
     game.getInitState({ gridSize: { columns, rows }, rand })
   );
 
-  const getTile = React.useCallback<GameContext["getTile"]>((tileId) => {
-    const tile = currentState.current.tiles.find((tile) => tile.id === tileId);
+  const getTile = React.useCallback<GameContext["getTile"]>(
+    (tileId, state = currentState.current) => {
+      const tile = state.tiles.find((tile) => tile.id === tileId);
 
-    if (!tile) return null;
+      if (!tile) return null;
 
-    return {
-      mergedFrom: null,
-      position: tile.position,
-      value: tile.value,
-      backgroundColor: tile.backgroundColor,
-      textColor: tile.textColor,
-    };
-  }, []);
+      return {
+        mergedFrom: null,
+        position: tile.position,
+        value: tile.value,
+        backgroundColor: tile.backgroundColor,
+        textColor: tile.textColor,
+      };
+    },
+    []
+  );
 
   const subscribeToTile = React.useCallback<GameContext["subscribeToTile"]>(
     (tileId, callback) => {
@@ -195,7 +200,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
           case "move": {
             const { tileId, toPosition } = diff.payload;
 
-            const tile = getTile(tileId);
+            const tile = getTile(tileId, nextState);
 
             if (!tile) {
               break;
@@ -223,7 +228,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
               mergedToTileTextColor,
             } = diff.payload;
 
-            const mergedToTile = getTile(mergedToTileId);
+            const mergedToTile = getTile(mergedToTileId, nextState);
 
             if (!mergedToTile) {
               break;
@@ -298,6 +303,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
       setAllToCurrentState,
       rows,
       columns,
+      vibrate,
     ]
   );
 
@@ -333,7 +339,16 @@ export function GameProvider(props: { children: React.ReactNode }) {
       columns,
       rows,
     }),
-    [game, subscribeToTile, animationProgress, getTile, handleAction, reset]
+    [
+      game,
+      subscribeToTile,
+      animationProgress,
+      getTile,
+      handleAction,
+      reset,
+      columns,
+      rows,
+    ]
   );
 
   return <Context.Provider value={value}>{props.children}</Context.Provider>;
