@@ -26,6 +26,7 @@ const descriptions: {
     randomAvailablePosition: Types.Position | null;
     expectedPositions?: TilePosition[];
     expectedState?: Types.GameState["state"];
+    seed?: string | number;
     gridSize: Types.GridSize;
   }[];
 }[] = [
@@ -275,6 +276,175 @@ const descriptions: {
       },
     ],
   },
+  {
+    title: "Merging chains",
+    cases: [
+      {
+        title: "Four tiles merge into two when moved up",
+        gridSize: { rows: 4, columns: 4 },
+        randomAvailablePosition: [3, 3],
+        prevTiles: [
+          { tileId: 0, value: 2, row: 0, column: 0 },
+          { tileId: 1, value: 2, row: 1, column: 0 },
+          { tileId: 2, value: 2, row: 2, column: 0 },
+          { tileId: 3, value: 2, row: 3, column: 0 },
+        ],
+        applyAction: "up",
+        expectedPositions: [
+          { tileId: 0, value: 4, row: 0, column: 0 },
+          { tileId: 2, value: 4, row: 1, column: 0 },
+          { tileId: 4, value: 2, row: 3, column: 3 },
+        ],
+      },
+    ],
+  },
+  {
+    title: "Random tile values",
+    cases: [
+      {
+        title: "Spawns a 4 tile when random >= 0.9",
+        gridSize: { rows: 4, columns: 4 },
+        randomAvailablePosition: [3, 3],
+        prevTiles: [
+          { tileId: 0, value: 2, row: 1, column: 0 },
+        ],
+        applyAction: "up",
+        seed: "h",
+        expectedPositions: [
+          { tileId: 0, value: 2, row: 0, column: 0 },
+          { tileId: 1, value: 4, row: 3, column: 3 },
+        ],
+      },
+    ],
+  },
+  {
+    title: "End states",
+    cases: [
+      {
+        title: "Game won when reaching 2048",
+        gridSize: { rows: 4, columns: 4 },
+        randomAvailablePosition: [3, 3],
+        prevTiles: [
+          { tileId: 0, value: 1024, row: 1, column: 0 },
+          { tileId: 1, value: 1024, row: 2, column: 0 },
+        ],
+        applyAction: "up",
+        expectedPositions: [
+          { tileId: 0, value: 2048, row: 0, column: 0 },
+          { tileId: 2, value: 2, row: 3, column: 3 },
+        ],
+        expectedState: "won",
+      },
+      {
+        title: "Game lost when board is full and no moves left",
+        gridSize: { rows: 4, columns: 4 },
+        randomAvailablePosition: null,
+        prevTiles: [
+          { tileId: 0, value: 2, row: 0, column: 0 },
+          { tileId: 1, value: 4, row: 0, column: 1 },
+          { tileId: 2, value: 2, row: 0, column: 2 },
+          { tileId: 3, value: 4, row: 0, column: 3 },
+          { tileId: 4, value: 4, row: 1, column: 0 },
+          { tileId: 5, value: 2, row: 1, column: 1 },
+          { tileId: 6, value: 4, row: 1, column: 2 },
+          { tileId: 7, value: 2, row: 1, column: 3 },
+          { tileId: 8, value: 2, row: 2, column: 0 },
+          { tileId: 9, value: 4, row: 2, column: 1 },
+          { tileId: 10, value: 2, row: 2, column: 2 },
+          { tileId: 11, value: 4, row: 2, column: 3 },
+          { tileId: 12, value: 4, row: 3, column: 0 },
+          { tileId: 13, value: 2, row: 3, column: 1 },
+          { tileId: 14, value: 4, row: 3, column: 2 },
+          { tileId: 15, value: 2, row: 3, column: 3 },
+        ],
+        applyAction: "up",
+        expectedPositions: [
+          { tileId: 0, value: 2, row: 0, column: 0 },
+          { tileId: 1, value: 4, row: 0, column: 1 },
+          { tileId: 2, value: 2, row: 0, column: 2 },
+          { tileId: 3, value: 4, row: 0, column: 3 },
+          { tileId: 4, value: 4, row: 1, column: 0 },
+          { tileId: 5, value: 2, row: 1, column: 1 },
+          { tileId: 6, value: 4, row: 1, column: 2 },
+          { tileId: 7, value: 2, row: 1, column: 3 },
+          { tileId: 8, value: 2, row: 2, column: 0 },
+          { tileId: 9, value: 4, row: 2, column: 1 },
+          { tileId: 10, value: 2, row: 2, column: 2 },
+          { tileId: 11, value: 4, row: 2, column: 3 },
+          { tileId: 12, value: 4, row: 3, column: 0 },
+          { tileId: 13, value: 2, row: 3, column: 1 },
+          { tileId: 14, value: 4, row: 3, column: 2 },
+          { tileId: 15, value: 2, row: 3, column: 3 },
+        ],
+        expectedState: "lost",
+      },
+      {
+        title: "Board full but moves left keeps playing",
+        gridSize: { rows: 4, columns: 4 },
+        randomAvailablePosition: [0, 3],
+        prevTiles: [
+          { tileId: 0, value: 2, row: 0, column: 0 },
+          { tileId: 1, value: 2, row: 0, column: 1 },
+          { tileId: 2, value: 4, row: 0, column: 2 },
+          { tileId: 3, value: 8, row: 0, column: 3 },
+          { tileId: 4, value: 16, row: 1, column: 0 },
+          { tileId: 5, value: 32, row: 1, column: 1 },
+          { tileId: 6, value: 64, row: 1, column: 2 },
+          { tileId: 7, value: 128, row: 1, column: 3 },
+          { tileId: 8, value: 2, row: 2, column: 0 },
+          { tileId: 9, value: 4, row: 2, column: 1 },
+          { tileId: 10, value: 8, row: 2, column: 2 },
+          { tileId: 11, value: 16, row: 2, column: 3 },
+          { tileId: 12, value: 32, row: 3, column: 0 },
+          { tileId: 13, value: 64, row: 3, column: 1 },
+          { tileId: 14, value: 128, row: 3, column: 2 },
+          { tileId: 15, value: 256, row: 3, column: 3 },
+        ],
+        applyAction: "left",
+        expectedPositions: [
+          { tileId: 0, value: 4, row: 0, column: 0 },
+          { tileId: 2, value: 4, row: 0, column: 1 },
+          { tileId: 3, value: 8, row: 0, column: 2 },
+          { tileId: 4, value: 16, row: 1, column: 0 },
+          { tileId: 5, value: 32, row: 1, column: 1 },
+          { tileId: 6, value: 64, row: 1, column: 2 },
+          { tileId: 7, value: 128, row: 1, column: 3 },
+          { tileId: 8, value: 2, row: 2, column: 0 },
+          { tileId: 9, value: 4, row: 2, column: 1 },
+          { tileId: 10, value: 8, row: 2, column: 2 },
+          { tileId: 11, value: 16, row: 2, column: 3 },
+          { tileId: 12, value: 32, row: 3, column: 0 },
+          { tileId: 13, value: 64, row: 3, column: 1 },
+          { tileId: 14, value: 128, row: 3, column: 2 },
+          { tileId: 15, value: 256, row: 3, column: 3 },
+          { tileId: 16, value: 2, row: 0, column: 3 },
+        ],
+        expectedState: "playing",
+      },
+    ],
+  },
+  {
+    title: "Small grid",
+    cases: [
+      {
+        title: "2x2 grid wins at 16",
+        gridSize: { rows: 2, columns: 2 },
+        randomAvailablePosition: [1, 1],
+        prevTiles: [
+          { tileId: 0, value: 8, row: 1, column: 0 },
+          { tileId: 1, value: 8, row: 0, column: 0 },
+          { tileId: 2, value: 2, row: 0, column: 1 },
+        ],
+        applyAction: "up",
+        expectedPositions: [
+          { tileId: 1, value: 16, row: 0, column: 0 },
+          { tileId: 2, value: 2, row: 0, column: 1 },
+          { tileId: 3, value: 2, row: 1, column: 1 },
+        ],
+        expectedState: "won",
+      },
+    ],
+  },
 ];
 
 function stateFromTilePositions(positions: TilePosition[]): Types.GameState {
@@ -325,20 +495,22 @@ describe("two048 game", () => {
           prevTiles,
           expectedPositions,
           randomAvailablePosition,
+          seed,
+          gridSize,
         }) => {
           test(title, () => {
             (getRandomAvailablePosition as jest.Mock).mockImplementation(
               () => randomAvailablePosition
             );
 
-            const rand = withRand("test");
+            const rand = withRand(seed ?? "test");
 
             const prevState = stateFromTilePositions(prevTiles);
 
             const nextState = two048.applyMove({
               state: prevState,
               direction: applyAction,
-              gridSize: { rows: 4, columns: 4 },
+              gridSize,
               rand,
             });
 
