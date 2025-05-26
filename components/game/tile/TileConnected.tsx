@@ -146,25 +146,8 @@ export default React.memo(function TileConnected({
       return size.value * state.position[1];
     }
 
-    if (
-      currentState.value &&
-      (animationProgress.value === 0 || !nextState.value)
-    ) {
-      // Initial state, or no nextState
-      top = topFromState(currentState.value);
-      left = leftFromState(currentState.value);
-      opacity = 1;
-      scaleX = 1;
-      scaleY = scaleX;
-    } else if (nextState.value && animationProgress.value === 1) {
-      // Finished Animating
-      top = topFromState(nextState.value);
-      left = leftFromState(nextState.value);
-      opacity = 1;
-      scaleX = 1;
-      scaleY = scaleX;
-    } else if (currentState.value && nextState.value) {
-      // Moving and/or merging
+    if (currentState.value && nextState.value) {
+      // Moving and/or merging or changing value
       top = interpolate(
         animationProgress.value,
         [0, 1],
@@ -202,7 +185,14 @@ export default React.memo(function TileConnected({
         scaleX = 1;
         scaleY = 1;
       }
-    } else if (nextState.value && !currentState.value) {
+    } else if (currentState.value) {
+      // Initial state, or no changes
+      top = topFromState(currentState.value);
+      left = leftFromState(currentState.value);
+      opacity = 1;
+      scaleX = 1;
+      scaleY = scaleX;
+    } else if (nextState.value) {
       // Spawning a new tile
       top = topFromState(nextState.value);
       left = leftFromState(nextState.value);
