@@ -76,7 +76,7 @@ const getInitState: Types.GetInitState = ({ rand, gridSize }) => {
 function slideTiles(
   tiles: Types.Tile[],
   direction: Types.Direction,
-  gridSize: Types.GridSize,
+  gridSize: Types.GridSize
 ) {
   const working: Types.Tile[] = tiles.map((t) => ({ ...t, mergedFrom: null }));
   const positionMap = createPositionMap(working);
@@ -134,7 +134,8 @@ function slideTiles(
   } else {
     for (let row = 0; row < rows; row++) {
       const rowTiles: Types.Tile[] = [];
-      const cIter = direction === "left" ? [0, columns, 1] : [columns - 1, -1, -1];
+      const cIter =
+        direction === "left" ? [0, columns, 1] : [columns - 1, -1, -1];
       for (let c = cIter[0]; c !== cIter[1]; c += cIter[2]) {
         const tile = positionMap[row]?.[c];
         if (tile) rowTiles.push(tile);
@@ -163,11 +164,12 @@ function spawnRandomTile(
   state: Types.GameState,
   gridSize: Types.GridSize,
   rand: Types.Rand,
-  changed: boolean,
-) {
+  changed: boolean
+): Types.GameState {
   if (!changed) return state;
 
   const value = rand() < 0.9 ? 2 : 4;
+
   const spawned = spawnTile({
     state,
     gridSize,
@@ -178,7 +180,10 @@ function spawnRandomTile(
   return spawned ?? state;
 }
 
-function resolveEndState(state: Types.GameState, gridSize: Types.GridSize) {
+function resolveEndState(
+  state: Types.GameState,
+  gridSize: Types.GridSize
+): Types.GameState {
   const { rows, columns } = gridSize;
 
   if (state.tiles.some((t) => t.value >= 2048)) {
@@ -195,7 +200,10 @@ function resolveEndState(state: Types.GameState, gridSize: Types.GridSize) {
         if (!tile) continue;
         const right = map[r]?.[c + 1];
         const down = map[r + 1]?.[c];
-        if ((right && right.value === tile.value) || (down && down.value === tile.value)) {
+        if (
+          (right && right.value === tile.value) ||
+          (down && down.value === tile.value)
+        ) {
           movesLeft = true;
           break outer;
         }
@@ -210,7 +218,11 @@ function resolveEndState(state: Types.GameState, gridSize: Types.GridSize) {
 }
 
 const applyMove: Types.ApplyMove = ({ state, direction, gridSize, rand }) => {
-  const { tiles, scoreIncrease, changed } = slideTiles(state.tiles, direction, gridSize);
+  const { tiles, scoreIncrease, changed } = slideTiles(
+    state.tiles,
+    direction,
+    gridSize
+  );
 
   let nextState: Types.GameState = {
     ...state,
