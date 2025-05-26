@@ -205,8 +205,6 @@ function resolveEndState(
 ): Types.GameState {
   const { rows, columns } = gridSize;
 
-  console.log(getGoalFromGridSize(gridSize));
-
   if (state.tiles.some((t) => t.value >= getGoalFromGridSize(gridSize))) {
     return { ...state, state: "won" };
   }

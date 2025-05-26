@@ -207,10 +207,6 @@ export function GameProvider(props: { children: React.ReactNode }) {
 
         setAllToCurrentState();
 
-        if (nextState.state !== "playing") {
-          console.log("Game ended:", nextState.state, nextState.score);
-        }
-
         if (pendingAction.current) {
           const action = pendingAction.current;
           pendingAction.current = null;
