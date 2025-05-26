@@ -1,6 +1,7 @@
 import React from "react";
 import { StyleSheet, View } from "react-native";
 import Animated, {
+  runOnJS,
   SharedValue,
   useAnimatedStyle,
   useDerivedValue,
@@ -12,7 +13,7 @@ export interface NumberProps {
   color: SharedValue<string | null>;
 }
 
-const maxDigits = 2;
+const maxDigits = 4;
 const zeroToNine = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 
 const Digit = React.memo(function Digit({
@@ -36,7 +37,7 @@ const Digit = React.memo(function Digit({
   rounded?: boolean;
 }) {
   /**
-   * Returns the floored value of the countdown for this digit
+   * Returns the floored value of the countdown for this digit.
    */
   const zeroToNineIndex = useDerivedValue((): number | null => {
     if (sharedValue.value === null) {
@@ -56,7 +57,27 @@ const Digit = React.memo(function Digit({
 
     const digit = parseInt(digitString, 10);
 
-    return digit;
+    if (isNaN(digit) || digit === undefined) return null;
+
+    if (digit !== 0) return digit;
+
+    let isLeadingZero = true;
+
+    for (let i = reversedDigitIndex + 1; i < countdownString.length; i++) {
+      const nextDigit = parseInt(
+        countdownString[countdownString.length - 1 - i],
+        10
+      );
+
+      if (nextDigit !== 0) {
+        isLeadingZero = false;
+        break;
+      }
+    }
+
+    if (isLeadingZero) return null;
+
+    return null;
   });
 
   /**
@@ -65,16 +86,21 @@ const Digit = React.memo(function Digit({
   const animatedStyle = useAnimatedStyle(() => {
     let opacity = 1;
     let marginTop = 0;
+    let width: number | undefined;
 
     if (zeroToNineIndex.value === null) {
       opacity = 0;
+      width = 0;
     } else {
+      // TODO: May need to do width per digit
+      width = fontSize * 0.6;
       marginTop = -fontSize * zeroToNineIndex.value;
     }
 
     return {
       marginTop,
       opacity,
+      width,
     };
   });
 
