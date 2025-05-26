@@ -49,7 +49,7 @@ export default React.memo(function Tile({
   return (
     <Animated.View style={style} id={`tile-${id}`}>
       <Animated.View style={wrapperStyle}>
-        <Number value={value} color={textColor} />
+        <Number value={value} color={textColor} maxDigits={4} />
       </Animated.View>
       {!!id && flags.showTileIds && <Text style={styles.id}>{id}</Text>}
     </Animated.View>

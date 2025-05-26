@@ -2,8 +2,10 @@ import Grid from "@/components/game/grid/Grid";
 import * as GameTypes from "@/game/Game.types";
 import React from "react";
 import { Button, View } from "react-native";
-import { useGridSize } from "../Game.context";
+import { useGridSize, useScore } from "../Game.context";
 import useGameController from "../hooks/useGameController";
+import Number from "@/components/game/Number";
+import { useSharedValue } from "react-native-reanimated";
 
 export interface GridConnectedProps {}
 
@@ -15,6 +17,8 @@ export default React.memo(function GridConnected(
   props: GridConnectedProps
 ): React.ReactNode {
   const { rows, columns } = useGridSize();
+  const score = useScore();
+  const scoreColor = useSharedValue<string | null>("white");
 
   const { panGesture, reset } = useGameController();
 
@@ -27,6 +31,13 @@ export default React.memo(function GridConnected(
 
   return (
     <>
+      <Number
+        color={scoreColor}
+        value={score}
+        fontSize={20}
+        style={{ marginBottom: 10 }}
+        maxDigits={10}
+      />
       <Grid
         columns={columns}
         rows={rows}

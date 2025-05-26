@@ -46,6 +46,7 @@ type GameContext = {
   reset: () => void;
   columns: number;
   rows: number;
+  score: SharedValue<number>;
 };
 
 const Context = React.createContext<GameContext | null>(null);
@@ -97,9 +98,19 @@ export function useGridSize() {
   return React.useMemo(() => ({ columns, rows }), [columns, rows]);
 }
 
+export function useScore() {
+  const fallback = useSharedValue<number>(0);
+  const { score } = React.useContext(Context) ?? {};
+
+  return useDerivedValue<number | null>(() => {
+    return score ? score.value : fallback.value;
+  });
+}
+
 export function GameProvider(props: { children: React.ReactNode }) {
   const { vibrate } = useVibrate();
   const [game] = React.useState<GameTypes.GameConfig>(defaultGame);
+  const score = useSharedValue<number>(0);
   const animationProgress = useSharedValue<number>(0);
 
   const rand = React.useMemo(() => withRand(generateSeed()), []);
@@ -291,6 +302,8 @@ export function GameProvider(props: { children: React.ReactNode }) {
         callback(getTile(tileId), nextTileState);
       });
 
+      score.value = withTiming(nextState.score, { duration });
+
       animationProgress.value = withTiming(1, { duration }, () => {
         runOnJS(postAction)();
       });
@@ -304,17 +317,20 @@ export function GameProvider(props: { children: React.ReactNode }) {
       rows,
       columns,
       vibrate,
+      score,
     ]
   );
 
   const reset = React.useCallback<GameContext["reset"]>(() => {
+    score.value = 0;
+
     currentState.current = game.getInitState({
       gridSize: { columns, rows },
       rand,
     });
 
     setAllToCurrentState();
-  }, [game, rand, setAllToCurrentState, rows, columns]);
+  }, [game, rand, setAllToCurrentState, rows, columns, score]);
 
   const init = React.useRef(true);
 
@@ -338,6 +354,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
       reset,
       columns,
       rows,
+      score,
     }),
     [
       game,
@@ -348,6 +365,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
       reset,
       columns,
       rows,
+      score,
     ]
   );
 

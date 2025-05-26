@@ -1,19 +1,23 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import Animated, {
-  runOnJS,
   SharedValue,
   useAnimatedStyle,
   useDerivedValue,
 } from "react-native-reanimated";
 
+// TODO: Have it auto expand to fit the digits, but still require a expectedMaxDigits prop, then we
+// only cause a react render in unexpected edge cases but still satisfy the user. And this would
+// only be with huge numbers so it shouldn't update often as it would be the highest decimal
+
 export interface NumberProps {
   value: SharedValue<number | null>;
   fontSize?: number;
-  color: SharedValue<string | null>;
+  color?: SharedValue<string | null>;
+  style?: StyleProp<ViewStyle>;
+  maxDigits: number;
 }
 
-const maxDigits = 4;
 const zeroToNine = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 
 const Digit = React.memo(function Digit({
@@ -24,7 +28,7 @@ const Digit = React.memo(function Digit({
   color,
 }: {
   value: SharedValue<number | null>;
-  color: SharedValue<string | null>;
+  color?: SharedValue<string | null>;
   /**
    * Is this the last number, the 10's digits the 100's? Done as an index. So:
    * 0 = 1's
@@ -77,7 +81,7 @@ const Digit = React.memo(function Digit({
 
     if (isLeadingZero) return null;
 
-    return null;
+    return digit;
   });
 
   /**
@@ -116,7 +120,7 @@ const Digit = React.memo(function Digit({
   );
 
   const animatedTextStyle = useAnimatedStyle(() => ({
-    color: color.value ?? "#000",
+    color: color?.value ?? "#000",
   }));
 
   const textStyle = React.useMemo(
@@ -148,16 +152,22 @@ const Digit = React.memo(function Digit({
   );
 });
 
-const digitArray = new Array(maxDigits).fill(0);
-
 export default React.memo(function Numbers({
   value,
   fontSize = 30,
   color,
+  style: styleProp,
+  maxDigits,
 }: NumberProps): React.ReactNode {
   const style = React.useMemo(
-    () => StyleSheet.flatten([styles.container, { height: fontSize }]),
-    [fontSize]
+    () =>
+      StyleSheet.flatten([styles.container, { height: fontSize }, styleProp]),
+    [fontSize, styleProp]
+  );
+
+  const digitArray = React.useMemo(
+    () => new Array(maxDigits).fill(0),
+    [maxDigits]
   );
 
   return (
