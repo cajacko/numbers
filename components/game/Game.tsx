@@ -2,6 +2,7 @@ import {
   GameProvider,
   useScore,
   useGameState,
+  useMoves,
 } from "@/components/game/Game.context";
 import GridConnected from "@/components/game/grid/GridConnected";
 import React from "react";
@@ -15,6 +16,7 @@ export interface GameProps {}
 
 function ConnectedGame(props: GameProps): React.ReactNode {
   const score = useScore();
+  const moves = useMoves();
   const scoreColor = useSharedValue<string | null>("white");
   const gameState = useGameState();
   const { panGesture, reset } = useGameController();
@@ -70,7 +72,20 @@ function ConnectedGame(props: GameProps): React.ReactNode {
   return (
     <View style={styles.container} onLayout={onLayout}>
       <View style={headerStyle}>
-        <Number color={scoreColor} value={score} fontSize={20} maxDigits={10} />
+        <View style={styles.scores}>
+          <Number
+            color={scoreColor}
+            value={score}
+            fontSize={20}
+            maxDigits={10}
+          />
+          <Number
+            color={scoreColor}
+            value={moves}
+            fontSize={20}
+            maxDigits={10}
+          />
+        </View>
         {gameState !== "playing" && (
           <Text style={styles.text}>
             {gameState === "won" ? "You Won!" : "You Lost!"}
@@ -112,6 +127,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 10,
     paddingBottom: 10,
+  },
+  scores: {
+    flexDirection: "row",
+    columnGap: 10,
   },
   text: {
     fontSize: 20,
