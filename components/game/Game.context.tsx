@@ -13,6 +13,7 @@ import {
 } from "react-native-reanimated";
 
 const duration = 250;
+const pendingDuration = 100;
 
 export type TileState = {
   position: GameTypes.Position;
@@ -42,7 +43,12 @@ type GameContext = {
     tileId: GameTypes.TileId,
     callback: TileSubscriber
   ) => { unsubscribe: () => void };
-  handleAction: (action: GameTypes.Direction) => void;
+  handleAction: (
+    action: GameTypes.Direction,
+    options?: {
+      animationDuration?: number;
+    }
+  ) => void;
   reset: () => void;
   columns: number;
   rows: number;
@@ -180,15 +186,17 @@ export function GameProvider(props: { children: React.ReactNode }) {
     animationProgress.value = 0;
   }, [animationProgress, getTile, score]);
 
-  const pendingAction = React.useRef<GameTypes.Direction | null>(null);
+  const pendingActions = React.useRef<GameTypes.Direction[]>([]);
 
   const handleAction = React.useCallback<GameContext["handleAction"]>(
-    (direction) => {
+    (direction, options) => {
+      const animationDuration = options?.animationDuration ?? duration;
+
       vibrate?.();
 
       // Prevent action if animation is in progress
       if (animationProgress.value > 0 && animationProgress.value < 1) {
-        pendingAction.current = direction;
+        pendingActions.current.push(direction);
 
         return;
       }
@@ -207,11 +215,14 @@ export function GameProvider(props: { children: React.ReactNode }) {
 
         setAllToCurrentState();
 
-        if (pendingAction.current) {
-          const action = pendingAction.current;
-          pendingAction.current = null;
+        if (pendingActions.current.length > 0) {
+          const nextAction = pendingActions.current.shift();
 
-          handleAction(action);
+          if (!nextAction) return;
+
+          handleAction(nextAction, {
+            animationDuration: pendingDuration,
+          });
         }
       }
 
@@ -318,11 +329,17 @@ export function GameProvider(props: { children: React.ReactNode }) {
         callback(getTile(tileId), nextTileState);
       });
 
-      score.value = withTiming(nextState.score, { duration });
-
-      animationProgress.value = withTiming(1, { duration }, () => {
-        runOnJS(postAction)();
+      score.value = withTiming(nextState.score, {
+        duration: animationDuration,
       });
+
+      animationProgress.value = withTiming(
+        1,
+        { duration: animationDuration },
+        () => {
+          runOnJS(postAction)();
+        }
+      );
     },
     [
       game,
