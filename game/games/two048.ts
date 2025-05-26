@@ -73,14 +73,18 @@ const getInitState: Types.GetInitState = ({ rand, gridSize }) => {
   return state;
 };
 
-const applyMove: Types.ApplyMove = ({ state, direction, gridSize, rand }) => {
-  const tiles: Types.Tile[] = state.tiles.map((t) => ({ ...t, mergedFrom: null }));
-  const positionMap = createPositionMap(tiles);
+function slideTiles(
+  tiles: Types.Tile[],
+  direction: Types.Direction,
+  gridSize: Types.GridSize
+) {
+  const working: Types.Tile[] = tiles.map((t) => ({ ...t, mergedFrom: null }));
+  const positionMap = createPositionMap(working);
   const removed = new Set<Types.TileId>();
   let scoreIncrease = 0;
   let changed = false;
 
-  function merge(target: Types.Tile, source: Types.Tile) {
+  const merge = (target: Types.Tile, source: Types.Tile) => {
     removed.add(source.id);
     target.value *= 2;
     const colors = getColorsFromValue(target.value);
@@ -88,23 +92,25 @@ const applyMove: Types.ApplyMove = ({ state, direction, gridSize, rand }) => {
     target.textColor = colors.textColor;
     target.mergedFrom = [target.id, source.id];
     scoreIncrease += target.value;
-    if (source.position[0] !== target.position[0] || source.position[1] !== target.position[1]) {
+    if (
+      source.position[0] !== target.position[0] ||
+      source.position[1] !== target.position[1]
+    ) {
       changed = true;
     }
-  }
+  };
 
-  function move(tile: Types.Tile, row: number, column: number) {
+  const move = (tile: Types.Tile, row: number, column: number) => {
     if (tile.position[0] !== row || tile.position[1] !== column) {
       changed = true;
       tile.position = [row, column];
     }
-  }
+  };
 
-  const rows = gridSize.rows;
-  const cols = gridSize.columns;
+  const { rows, columns } = gridSize;
 
   if (direction === "up" || direction === "down") {
-    for (let col = 0; col < cols; col++) {
+    for (let col = 0; col < columns; col++) {
       const columnTiles: Types.Tile[] = [];
       const rIter = direction === "up" ? [0, rows, 1] : [rows - 1, -1, -1];
       for (let r = rIter[0]; r !== rIter[1]; r += rIter[2]) {
@@ -128,13 +134,14 @@ const applyMove: Types.ApplyMove = ({ state, direction, gridSize, rand }) => {
   } else {
     for (let row = 0; row < rows; row++) {
       const rowTiles: Types.Tile[] = [];
-      const cIter = direction === "left" ? [0, cols, 1] : [cols - 1, -1, -1];
+      const cIter =
+        direction === "left" ? [0, columns, 1] : [columns - 1, -1, -1];
       for (let c = cIter[0]; c !== cIter[1]; c += cIter[2]) {
         const tile = positionMap[row]?.[c];
         if (tile) rowTiles.push(tile);
       }
 
-      let targetCol = direction === "left" ? 0 : cols - 1;
+      let targetCol = direction === "left" ? 0 : columns - 1;
       let lastTile: Types.Tile | null = null;
 
       rowTiles.forEach((tile) => {
@@ -149,52 +156,82 @@ const applyMove: Types.ApplyMove = ({ state, direction, gridSize, rand }) => {
     }
   }
 
-  let newTiles = tiles.filter((t) => !removed.has(t.id));
+  const newTiles = working.filter((t) => !removed.has(t.id));
+  return { tiles: newTiles, scoreIncrease, changed };
+}
+
+function spawnRandomTile(
+  state: Types.GameState,
+  gridSize: Types.GridSize,
+  rand: Types.Rand,
+  changed: boolean
+): Types.GameState {
+  if (!changed) return state;
+
+  const value = rand() < 0.9 ? 2 : 4;
+
+  const spawned = spawnTile({
+    state,
+    gridSize,
+    rand,
+    tile: { value, ...getColorsFromValue(value) },
+  });
+
+  return spawned ?? state;
+}
+
+function resolveEndState(
+  state: Types.GameState,
+  gridSize: Types.GridSize
+): Types.GameState {
+  const { rows, columns } = gridSize;
+
+  if (state.tiles.some((t) => t.value >= 2048)) {
+    return { ...state, state: "won" };
+  }
+
+  const available = getAvailablePositions({ gridSize, state });
+  if (available.length === 0) {
+    const map = createPositionMap(state.tiles);
+    let movesLeft = false;
+    outer: for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < columns; c++) {
+        const tile = map[r]?.[c];
+        if (!tile) continue;
+        const right = map[r]?.[c + 1];
+        const down = map[r + 1]?.[c];
+        if (
+          (right && right.value === tile.value) ||
+          (down && down.value === tile.value)
+        ) {
+          movesLeft = true;
+          break outer;
+        }
+      }
+    }
+    if (!movesLeft) {
+      return { ...state, state: "lost" };
+    }
+  }
+
+  return state;
+}
+
+const applyMove: Types.ApplyMove = ({ state, direction, gridSize, rand }) => {
+  const { tiles, scoreIncrease, changed } = slideTiles(
+    state.tiles,
+    direction,
+    gridSize
+  );
 
   let nextState: Types.GameState = {
     ...state,
-    tiles: newTiles,
+    tiles,
     score: state.score + scoreIncrease,
   };
 
-  if (changed) {
-    const value = rand() < 0.9 ? 2 : 4;
-    const spawned = spawnTile({
-      state: nextState,
-      gridSize,
-      rand,
-      tile: { value, ...getColorsFromValue(value) },
-    });
-
-    if (spawned) nextState = spawned;
-  }
-
-  // check win
-  if (nextState.tiles.some((t) => t.value >= 2048)) {
-    nextState.state = "won";
-  } else {
-    // check lost
-    const available = getAvailablePositions({ gridSize, state: nextState });
-    if (available.length === 0) {
-      const map = createPositionMap(nextState.tiles);
-      let movesLeft = false;
-      outer: for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-          const tile = map[r]?.[c];
-          if (!tile) continue;
-          const right = map[r]?.[c + 1];
-          const down = map[r + 1]?.[c];
-          if ((right && right.value === tile.value) || (down && down.value === tile.value)) {
-            movesLeft = true;
-            break outer;
-          }
-        }
-      }
-      if (!movesLeft) {
-        nextState.state = "lost";
-      }
-    }
-  }
+  nextState = spawnRandomTile(nextState, gridSize, rand, changed);
+  nextState = resolveEndState(nextState, gridSize);
 
   return nextState;
 };
