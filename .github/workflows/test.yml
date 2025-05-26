@@ -1,0 +1,29 @@
+name: test
+on:
+  push:
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        task: [lint, test, type-check]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.0.2
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Run ${{ matrix.task }}
+        run: |
+          if [ "${{ matrix.task }}" == "lint" ]; then yarn lint; fi
+          if [ "${{ matrix.task }}" == "test" ]; then yarn test:ci; fi
+          if [ "${{ matrix.task }}" == "type-check" ]; then npx tsc; fi
