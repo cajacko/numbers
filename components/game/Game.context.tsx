@@ -47,6 +47,7 @@ type GameContext = {
   columns: number;
   rows: number;
   score: SharedValue<number>;
+  state: GameTypes.State;
 };
 
 const Context = React.createContext<GameContext | null>(null);
@@ -107,10 +108,17 @@ export function useScore() {
   });
 }
 
+export function useGameState(): GameTypes.State {
+  const fallback = "playing";
+  const { state } = React.useContext(Context) ?? {};
+
+  return state ?? fallback;
+}
+
 export function GameProvider(props: { children: React.ReactNode }) {
   const { vibrate } = useVibrate();
   const [game] = React.useState<GameTypes.GameConfig>(defaultGame);
-  const score = useSharedValue<number>(0);
+
   const animationProgress = useSharedValue<number>(0);
 
   const rand = React.useMemo(() => withRand(generateSeed()), []);
@@ -122,6 +130,11 @@ export function GameProvider(props: { children: React.ReactNode }) {
 
   const currentState = React.useRef(
     game.getInitState({ gridSize: { columns, rows }, rand })
+  );
+
+  const score = useSharedValue<number>(currentState.current.score);
+  const [state, setState] = React.useState<GameTypes.State>(
+    currentState.current.state
   );
 
   const getTile = React.useCallback<GameContext["getTile"]>(
@@ -155,6 +168,9 @@ export function GameProvider(props: { children: React.ReactNode }) {
   );
 
   const setAllToCurrentState = React.useCallback(() => {
+    setState(currentState.current.state);
+    score.value = currentState.current.score;
+
     Object.entries(callbacks.current).forEach(([tileIdString, callback]) => {
       const tileId = parseInt(tileIdString);
 
@@ -162,7 +178,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
     });
 
     animationProgress.value = 0;
-  }, [animationProgress, getTile]);
+  }, [animationProgress, getTile, score]);
 
   const pendingAction = React.useRef<GameTypes.Direction | null>(null);
 
@@ -190,6 +206,10 @@ export function GameProvider(props: { children: React.ReactNode }) {
         currentState.current = nextState;
 
         setAllToCurrentState();
+
+        if (nextState.state !== "playing") {
+          console.log("Game ended:", nextState.state, nextState.score);
+        }
 
         if (pendingAction.current) {
           const action = pendingAction.current;
@@ -322,12 +342,13 @@ export function GameProvider(props: { children: React.ReactNode }) {
   );
 
   const reset = React.useCallback<GameContext["reset"]>(() => {
-    score.value = 0;
-
     currentState.current = game.getInitState({
       gridSize: { columns, rows },
       rand,
     });
+
+    setState(currentState.current.state);
+    score.value = currentState.current.score;
 
     setAllToCurrentState();
   }, [game, rand, setAllToCurrentState, rows, columns, score]);
@@ -355,6 +376,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
       columns,
       rows,
       score,
+      state,
     }),
     [
       game,
@@ -366,6 +388,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
       columns,
       rows,
       score,
+      state,
     ]
   );
 
