@@ -1,7 +1,7 @@
 import TileConnected from "@/components/game/tile/TileConnected";
 import * as GameTypes from "@/game/Game.types";
 import React from "react";
-import { StyleSheet, View, ViewProps } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { GestureDetector, GestureType } from "react-native-gesture-handler";
 import { useSharedValue } from "react-native-reanimated";
 
@@ -10,40 +10,74 @@ export interface GridProps {
   columns: number;
   gesture: GestureType;
   tileIds: GameTypes.TileId[];
+  availableHeight: number;
+  availableWidth: number;
 }
+
+const maxTileSize = 250;
 
 export default React.memo(function Grid({
   columns,
   rows,
   gesture,
   tileIds,
+  availableHeight,
+  availableWidth,
 }: GridProps): React.ReactNode {
-  const [ready, setReady] = React.useState(false);
+  const tileSize = React.useMemo((): number => {
+    const size = Math.min(
+      availableHeight / rows,
+      availableWidth / columns,
+      maxTileSize
+    );
 
-  const size = useSharedValue<number>(100);
+    return Math.floor(size);
+  }, [availableHeight, availableWidth, columns, rows]);
 
-  const onLayout = React.useCallback<NonNullable<ViewProps["onLayout"]>>(
-    (event) => {
-      const { width } = event.nativeEvent.layout;
+  const sizeSharedValue = useSharedValue<number>(tileSize);
 
-      const containerWidth = width;
-      const blockWidth = containerWidth / columns;
-      size.value = blockWidth;
+  React.useEffect(() => {
+    sizeSharedValue.value = tileSize;
+  }, [tileSize, sizeSharedValue]);
 
-      setReady(true);
-    },
-    [size, columns]
-  );
-
-  const style = React.useMemo(
+  const containerStyle = React.useMemo(
     () =>
       StyleSheet.flatten([
         styles.container,
         {
-          aspectRatio: columns / rows,
+          width: tileSize * columns,
+          height: tileSize * rows,
+          maxWidth: tileSize * columns,
+          maxHeight: tileSize * rows,
         },
       ]),
-    [rows, columns]
+    [tileSize, rows, columns]
+  );
+
+  const rowStyle = React.useMemo(
+    () =>
+      StyleSheet.flatten([
+        styles.row,
+        {
+          height: tileSize,
+          maxHeight: tileSize,
+        },
+      ]),
+    [tileSize]
+  );
+
+  const cellStyle = React.useMemo(
+    () =>
+      StyleSheet.flatten([
+        styles.cell,
+        {
+          height: tileSize,
+          width: tileSize,
+          maxWidth: tileSize,
+          maxHeight: tileSize,
+        },
+      ]),
+    [tileSize]
   );
 
   const rowIds = React.useMemo(
@@ -58,20 +92,23 @@ export default React.memo(function Grid({
 
   return (
     <GestureDetector gesture={gesture}>
-      <View style={style} onLayout={onLayout}>
+      <View style={containerStyle}>
         {rowIds.map((rowId) => (
-          <View key={rowId} style={styles.row}>
+          <View key={rowId} style={rowStyle}>
             {columnIds.map((columnId) => (
-              <View key={columnId} style={styles.column}>
+              <View key={columnId} style={cellStyle}>
                 <View style={styles.tile} />
               </View>
             ))}
           </View>
         ))}
-        {ready &&
-          tileIds.map((tileId) => (
-            <TileConnected key={`tile-${tileId}`} id={tileId} size={size} />
-          ))}
+        {tileIds.map((tileId) => (
+          <TileConnected
+            key={`tile-${tileId}`}
+            id={tileId}
+            size={sizeSharedValue}
+          />
+        ))}
       </View>
     </GestureDetector>
   );
@@ -79,23 +116,23 @@ export default React.memo(function Grid({
 
 const styles = StyleSheet.create({
   container: {
-    width: "100%",
     backgroundColor: "#9c8a7a",
-    maxWidth: 500,
-    maxHeight: 500,
     borderRadius: 10,
+    overflow: "hidden",
   },
   row: {
     flexDirection: "row",
     flex: 1,
+    overflow: "hidden",
   },
-  column: {
-    flex: 1,
+  cell: {
     padding: 8,
+    overflow: "hidden",
   },
   tile: {
     flex: 1,
     borderRadius: 10,
     backgroundColor: "#bead98",
+    overflow: "hidden",
   },
 });

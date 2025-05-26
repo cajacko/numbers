@@ -3,7 +3,8 @@ import * as GameTypes from "@/game/Game.types";
 import React from "react";
 import { useGridSize } from "../Game.context";
 
-export interface GridConnectedProps extends Pick<GridProps, "gesture"> {}
+export interface GridConnectedProps
+  extends Pick<GridProps, "gesture" | "availableHeight" | "availableWidth"> {}
 
 // Multiplier for the number of tiles to create, to account for merges and animations where we have
 // more tiles available spaces

@@ -123,8 +123,8 @@ export function GameProvider(props: { children: React.ReactNode }) {
 
   const rand = React.useMemo(() => withRand(generateSeed()), []);
 
-  const columns = game.defaultGridSize.columns;
-  const rows = game.defaultGridSize.rows;
+  const columns = 4;
+  const rows = 8;
 
   const callbacks = React.useRef<Record<GameTypes.TileId, TileSubscriber>>({});
 
