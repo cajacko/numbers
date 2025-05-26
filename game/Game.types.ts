@@ -13,10 +13,12 @@ export type Tile = {
   textColor: string;
 };
 
+export type State = "playing" | "won" | "lost";
+
 export type GameState = {
   tiles: Tile[];
   score: number;
-  state: "playing" | "won" | "lost";
+  state: State;
 };
 
 export type Direction = "up" | "down" | "left" | "right";

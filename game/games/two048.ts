@@ -180,13 +180,34 @@ function spawnRandomTile(
   return spawned ?? state;
 }
 
+/**
+ * 2x2 = 16
+ * 4x4 = 2048
+ * ...
+ */
+function getGoalFromGridSize(gridSize: Types.GridSize): number {
+  const { rows, columns } = gridSize;
+
+  const tiles = rows * columns;
+
+  switch (tiles) {
+    case 4: // 2x2
+      return 16; // Goal for 2x2 grid
+    default:
+    case 16: // 4x4
+      return 2048;
+  }
+}
+
 function resolveEndState(
   state: Types.GameState,
   gridSize: Types.GridSize
 ): Types.GameState {
   const { rows, columns } = gridSize;
 
-  if (state.tiles.some((t) => t.value >= 2048)) {
+  console.log(getGoalFromGridSize(gridSize));
+
+  if (state.tiles.some((t) => t.value >= getGoalFromGridSize(gridSize))) {
     return { ...state, state: "won" };
   }
 
