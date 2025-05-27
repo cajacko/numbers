@@ -52,6 +52,8 @@ type GameContext = {
   reset: () => void;
   columns: number;
   rows: number;
+  setColumns: (value: number) => void;
+  setRows: (value: number) => void;
   score: SharedValue<number>;
   state: GameTypes.State;
 };
@@ -97,12 +99,17 @@ export function useActionHandlers() {
 }
 
 export function useGridSize() {
-  const { columns, rows } = React.useContext(Context) ?? {
+  const { columns, rows, setColumns, setRows } = React.useContext(Context) ?? {
     columns: 4,
     rows: 4,
+    setColumns: () => {},
+    setRows: () => {},
   };
 
-  return React.useMemo(() => ({ columns, rows }), [columns, rows]);
+  return React.useMemo(
+    () => ({ columns, rows, setColumns, setRows }),
+    [columns, rows, setColumns, setRows]
+  );
 }
 
 export function useScore() {
@@ -129,8 +136,10 @@ export function GameProvider(props: { children: React.ReactNode }) {
 
   const rand = React.useMemo(() => withRand(generateSeed()), []);
 
-  const columns = 4;
-  const rows = 8;
+  const [columns, setColumns] = React.useState<number>(
+    game.defaultGridSize.columns
+  );
+  const [rows, setRows] = React.useState<number>(game.defaultGridSize.rows);
 
   const callbacks = React.useRef<Record<GameTypes.TileId, TileSubscriber>>({});
 
@@ -388,6 +397,8 @@ export function GameProvider(props: { children: React.ReactNode }) {
       reset,
       columns,
       rows,
+      setColumns,
+      setRows,
       score,
       state,
     }),
@@ -400,6 +411,8 @@ export function GameProvider(props: { children: React.ReactNode }) {
       reset,
       columns,
       rows,
+      setColumns,
+      setRows,
       score,
       state,
     ]
