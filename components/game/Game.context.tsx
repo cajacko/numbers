@@ -53,6 +53,7 @@ type GameContext = {
   columns: number;
   rows: number;
   score: SharedValue<number>;
+  moves: SharedValue<number>;
   state: GameTypes.State;
 };
 
@@ -114,6 +115,15 @@ export function useScore() {
   });
 }
 
+export function useMoves() {
+  const fallback = useSharedValue<number>(0);
+  const { moves } = React.useContext(Context) ?? {};
+
+  return useDerivedValue<number | null>(() => {
+    return moves ? moves.value : fallback.value;
+  });
+}
+
 export function useGameState(): GameTypes.State {
   const fallback = "playing";
   const { state } = React.useContext(Context) ?? {};
@@ -139,6 +149,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
   );
 
   const score = useSharedValue<number>(currentState.current.score);
+  const moves = useSharedValue<number>(0);
   const [state, setState] = React.useState<GameTypes.State>(
     currentState.current.state
   );
@@ -333,6 +344,12 @@ export function GameProvider(props: { children: React.ReactNode }) {
         duration: animationDuration,
       });
 
+      if (diffs.length > 0) {
+        moves.value = withTiming(moves.value + 1, {
+          duration: animationDuration,
+        });
+      }
+
       animationProgress.value = withTiming(
         1,
         { duration: animationDuration },
@@ -362,9 +379,10 @@ export function GameProvider(props: { children: React.ReactNode }) {
 
     setState(currentState.current.state);
     score.value = currentState.current.score;
+    moves.value = 0;
 
     setAllToCurrentState();
-  }, [game, rand, setAllToCurrentState, rows, columns, score]);
+  }, [game, rand, setAllToCurrentState, rows, columns, score, moves]);
 
   const init = React.useRef(true);
 
@@ -389,6 +407,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
       columns,
       rows,
       score,
+      moves,
       state,
     }),
     [
@@ -401,6 +420,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
       columns,
       rows,
       score,
+      moves,
       state,
     ]
   );
