@@ -2,6 +2,7 @@ import {
   GameProvider,
   useScore,
   useGameState,
+  useGridSize,
 } from "@/components/game/Game.context";
 import GridConnected from "@/components/game/grid/GridConnected";
 import React from "react";
@@ -19,6 +20,27 @@ function ConnectedGame(props: GameProps): React.ReactNode {
   const gameState = useGameState();
   const { panGesture, reset } = useGameController();
   const insets = useSafeAreaInsets();
+  const { columns, rows, setColumns, setRows } = useGridSize();
+
+  const options = React.useMemo(() =>
+    Array.from({ length: 19 }, (_, i) => i + 2),
+  []);
+
+  const onRowsChange = React.useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      setRows(parseInt(e.target.value, 10));
+      reset?.();
+    },
+    [setRows, reset]
+  );
+
+  const onColumnsChange = React.useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      setColumns(parseInt(e.target.value, 10));
+      reset?.();
+    },
+    [setColumns, reset]
+  );
 
   const [size, setSize] = React.useState<{
     width: number;
@@ -85,6 +107,20 @@ function ConnectedGame(props: GameProps): React.ReactNode {
       />
       {reset && (
         <View style={footerStyle}>
+          <select value={rows} onChange={onRowsChange} style={{ marginRight: 8 }}>
+            {options.map((n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
+          </select>
+          <select value={columns} onChange={onColumnsChange} style={{ marginRight: 8 }}>
+            {options.map((n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
+          </select>
           <Button title="reset" onPress={reset} />
         </View>
       )}
