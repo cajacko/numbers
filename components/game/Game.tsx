@@ -17,7 +17,7 @@ function ConnectedGame(props: GameProps): React.ReactNode {
   const score = useScore();
   const scoreColor = useSharedValue<string | null>("white");
   const gameState = useGameState();
-  const { panGesture, reset } = useGameController();
+  const { gesture, reset } = useGameController();
   const insets = useSafeAreaInsets();
 
   const [size, setSize] = React.useState<{
@@ -79,7 +79,7 @@ function ConnectedGame(props: GameProps): React.ReactNode {
       </View>
 
       <GridConnected
-        gesture={panGesture}
+        gesture={gesture}
         availableHeight={availableSize.height}
         availableWidth={availableSize.width}
       />

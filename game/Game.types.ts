@@ -21,7 +21,7 @@ export type GameState = {
   state: State;
 };
 
-export type Direction = "up" | "down" | "left" | "right";
+export type Direction = "up" | "down" | "left" | "right" | "tap";
 
 export type GridSize = {
   rows: number;
@@ -41,6 +41,7 @@ export type ApplyMove = (props: {
 }) => GameState;
 
 export type GameConfig = {
+  supportedActions: Direction[];
   name: string;
   getInitState: GetInitState;
   applyMove: ApplyMove;

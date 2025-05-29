@@ -24,6 +24,9 @@ export default function useGameController() {
         case "ArrowRight":
           handleAction?.("right");
           break;
+        case "Enter":
+          handleAction?.("tap");
+          break;
       }
     };
 
@@ -34,27 +37,52 @@ export default function useGameController() {
     };
   }, [handleAction]);
 
-  const panGesture = Gesture.Pan().onEnd((e) => {
-    const { translationX, translationY } = e;
+  const tapGesture = React.useMemo(
+    () =>
+      Gesture.Tap()
+        .maxDuration(250) // must be a short press
+        .maxDeltaX(10)
+        .maxDeltaY(10)
+        .onEnd(() => {
+          if (handleAction) {
+            runOnJS(handleAction)("tap");
+          }
+        }),
+    [handleAction]
+  );
 
-    const absX = Math.abs(translationX);
-    const absY = Math.abs(translationY);
+  const panGesture = React.useMemo(
+    () =>
+      Gesture.Pan()
+        .minDistance(10)
+        .onEnd((e) => {
+          const { translationX, translationY } = e;
 
-    let direction: GameTypes.Direction | null = null;
+          const absX = Math.abs(translationX);
+          const absY = Math.abs(translationY);
 
-    if (absX > absY && absX > 20) {
-      direction = translationX > 0 ? "right" : "left";
-    } else if (absY > 20) {
-      direction = translationY > 0 ? "down" : "up";
-    }
+          let direction: GameTypes.Direction | null = null;
 
-    if (direction && handleAction) {
-      runOnJS(handleAction)(direction);
-    }
-  });
+          if (absX > absY && absX > 20) {
+            direction = translationX > 0 ? "right" : "left";
+          } else if (absY > 20) {
+            direction = translationY > 0 ? "down" : "up";
+          }
+
+          if (direction && handleAction) {
+            runOnJS(handleAction)(direction);
+          }
+        }),
+    [handleAction]
+  );
+
+  const gesture = React.useMemo(
+    () => Gesture.Race(panGesture, tapGesture),
+    [tapGesture, panGesture]
+  );
 
   return {
-    panGesture,
+    gesture,
     handleAction,
     reset,
   };

@@ -2,13 +2,17 @@ import TileConnected from "@/components/game/tile/TileConnected";
 import * as GameTypes from "@/game/Game.types";
 import React from "react";
 import { StyleSheet, View } from "react-native";
-import { GestureDetector, GestureType } from "react-native-gesture-handler";
+import {
+  ComposedGesture,
+  GestureDetector,
+  GestureType,
+} from "react-native-gesture-handler";
 import { useSharedValue } from "react-native-reanimated";
 
 export interface GridProps {
   rows: number;
   columns: number;
-  gesture: GestureType;
+  gesture: GestureType | ComposedGesture;
   tileIds: GameTypes.TileId[];
   availableHeight: number;
   availableWidth: number;

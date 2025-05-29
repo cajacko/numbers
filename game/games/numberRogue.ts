@@ -1,8 +1,13 @@
 import * as Types from "@/game/Game.types";
-import spawnTile from "@/game/utils/spawnTile";
-import createPositionMap from "@/game/utils/createPositionMap";
-import getAvailablePositions from "@/game/utils/getAvailablePositions";
 import getFreeTileId from "@/game/utils/getFreeTileId";
+
+const supportedActions: Types.Direction[] = [
+  "up",
+  "down",
+  "left",
+  "right",
+  "tap",
+];
 
 const heroColor = "white";
 const enemyColor = "red";
@@ -102,7 +107,7 @@ function getNextHeroPosition({
       nextPosition[1] += 1;
       break;
     default:
-      throw new Error(`Invalid direction: ${direction}`);
+      return null;
   }
 
   // Check if the next position is within the grid bounds
@@ -112,7 +117,7 @@ function getNextHeroPosition({
     nextPosition[1] < 0 ||
     nextPosition[1] >= gridSize.columns
   ) {
-    return null; // Invalid position
+    return null; // No move
   }
 
   return nextPosition;
@@ -252,6 +257,10 @@ function resolveEndState(state: Types.GameState): Types.GameState {
 }
 
 const applyMove: Types.ApplyMove = ({ state, direction, gridSize, rand }) => {
+  if (!supportedActions.includes(direction)) {
+    return state; // Invalid action, return current state
+  }
+
   let nextState: Types.GameState = { ...state };
 
   const nextHeroPosition = getNextHeroPosition({
@@ -267,10 +276,10 @@ const applyMove: Types.ApplyMove = ({ state, direction, gridSize, rand }) => {
     });
 
     if (!tileAtNextPosition) {
-      console.log("Moving hero to empty position: ", nextHeroPosition);
+      // console.log("Moving hero to empty position: ", nextHeroPosition);
       nextState = moveHeroToPosition(state, nextHeroPosition);
     } else {
-      console.log("Collide!", nextHeroPosition);
+      // console.log("Collide!", nextHeroPosition);
       nextState = resolveHeroEnemyCollision({
         state,
         position: nextHeroPosition,
@@ -278,7 +287,7 @@ const applyMove: Types.ApplyMove = ({ state, direction, gridSize, rand }) => {
       });
     }
   } else {
-    console.log("Invalid move, hero cannot move in that direction.", direction);
+    // console.log("Invalid move, hero cannot move in that direction.", direction);
   }
 
   nextState = resolveEndState(nextState);
@@ -287,7 +296,8 @@ const applyMove: Types.ApplyMove = ({ state, direction, gridSize, rand }) => {
 };
 
 const gameConfig: Types.GameConfig = {
-  name: "2048",
+  supportedActions,
+  name: "Number Rogue",
   getInitState,
   applyMove,
   defaultGridSize: {
