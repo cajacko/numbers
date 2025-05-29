@@ -25,6 +25,7 @@ export default function useGameController() {
           handleAction?.("right");
           break;
         case "Enter":
+        case " ":
           handleAction?.("tap");
           break;
       }

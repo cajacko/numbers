@@ -256,12 +256,115 @@ function resolveEndState(state: Types.GameState): Types.GameState {
   return state; // Game continues
 }
 
+type Damage = {
+  position: Types.Position;
+  value: number;
+  target: "hero" | "enemy" | "all";
+};
+
+function damageTileId({
+  state,
+  tileId,
+  value,
+}: {
+  state: Types.GameState;
+  tileId: Types.TileId;
+  value: number;
+}): Types.GameState {
+  const tiles: Types.Tile[] = [];
+
+  state.tiles.forEach((tile) => {
+    if (tile.id === tileId) {
+      const newValue = tile.value - value;
+
+      if (newValue > 0) {
+        tiles.push({ ...tile, value: newValue });
+      }
+    } else {
+      tiles.push(tile);
+    }
+  });
+
+  return {
+    ...state,
+    tiles,
+  };
+}
+
+function dealDamage({
+  damage,
+  state,
+}: {
+  state: Types.GameState;
+  damage: Damage[];
+}): Types.GameState {
+  let nextState: Types.GameState = { ...state };
+
+  damage.forEach(({ position, value, target }) => {
+    const tile = getTileAtPosition({ state: nextState, position });
+
+    if (!tile) {
+      return; // No tile at the specified position
+    }
+
+    if (target === "hero" && tileType(tile) === "hero") {
+      nextState = damageTileId({
+        state: nextState,
+        tileId: tile.id,
+        value,
+      });
+    } else if (target === "enemy" && tileType(tile) === "enemy") {
+      nextState = damageTileId({
+        state: nextState,
+        tileId: tile.id,
+        value,
+      });
+    } else if (target === "all") {
+      nextState = damageTileId({
+        state: nextState,
+        tileId: tile.id,
+        value,
+      });
+    }
+  });
+
+  return nextState;
+}
+
+// Deals 1 damage to all adjacent enemies to the hero (orthogonal only)
+function resolveTapAction(state: Types.GameState): Types.GameState {
+  const heroTile = getHeroTile(state);
+  const heroPosition = heroTile.position;
+
+  const adjacentPositions: Types.Position[] = [
+    [heroPosition[0] - 1, heroPosition[1]], // Up
+    [heroPosition[0] + 1, heroPosition[1]], // Down
+    [heroPosition[0], heroPosition[1] - 1], // Left
+    [heroPosition[0], heroPosition[1] + 1], // Right
+  ];
+
+  const damage: Damage[] = adjacentPositions.map((position) => ({
+    position,
+    value: 1, // Deal 1 damage
+    target: "enemy", // Target only enemies
+  }));
+
+  return dealDamage({
+    state,
+    damage,
+  });
+}
+
 const applyMove: Types.ApplyMove = ({ state, direction, gridSize, rand }) => {
   if (!supportedActions.includes(direction)) {
     return state; // Invalid action, return current state
   }
 
   let nextState: Types.GameState = { ...state };
+
+  if (direction === "tap") {
+    nextState = resolveTapAction(nextState);
+  }
 
   const nextHeroPosition = getNextHeroPosition({
     state,
