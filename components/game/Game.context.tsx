@@ -12,8 +12,8 @@ import {
   withTiming,
 } from "react-native-reanimated";
 
-const duration = 250;
-const pendingDuration = 100;
+const duration = 300;
+const pendingDuration = duration / 2;
 
 export type TileState = {
   position: GameTypes.Position;
@@ -23,7 +23,7 @@ export type TileState = {
 };
 
 export type TileAnimatingState = TileState & {
-  collapsing: "x" | "y" | null;
+  collapsing: "top" | "bottom" | "left" | "right" | "center" | null;
   scalePop: boolean;
 };
 
@@ -127,6 +127,21 @@ export function useGameState(): GameTypes.State {
   const { state } = React.useContext(Context) ?? {};
 
   return state ?? fallback;
+}
+
+function getCollapsingFromDirection(direction: GameTypes.Direction) {
+  switch (direction) {
+    case "up":
+      return "top";
+    case "down":
+      return "bottom";
+    case "left":
+      return "left";
+    case "right":
+      return "right";
+    default:
+      return null;
+  }
 }
 
 export function GameProvider(props: { children: React.ReactNode }) {
@@ -304,8 +319,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
                 textColor: tile.textColor,
                 position: mergedToTile.position,
                 scalePop: false,
-                collapsing:
-                  direction === "up" || direction === "down" ? "y" : "x",
+                collapsing: getCollapsingFromDirection(direction) ?? "center",
               };
             });
 
@@ -322,6 +336,40 @@ export function GameProvider(props: { children: React.ReactNode }) {
               scalePop: false,
               backgroundColor,
               textColor,
+            };
+
+            break;
+          }
+          case "remove": {
+            const { tileId } = diff.payload;
+
+            const tile = getTile(tileId, currentState.current);
+
+            if (!tile) {
+              break;
+            }
+
+            newTileStates[tileId] = {
+              ...tile,
+              collapsing: "center",
+              scalePop: false,
+            };
+
+            break;
+          }
+          case "value-change": {
+            const { tileId } = diff.payload;
+
+            const tile = getTile(tileId, nextState);
+
+            if (!tile) {
+              break;
+            }
+
+            newTileStates[tileId] = {
+              ...tile,
+              collapsing: null,
+              scalePop: true,
             };
 
             break;

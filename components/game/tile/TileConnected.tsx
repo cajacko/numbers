@@ -1,4 +1,4 @@
-import Tile from "@/components/game/tile/Tile";
+import Tile, { TileProps } from "@/components/game/tile/Tile";
 import * as GameTypes from "@/game/Game.types";
 import React from "react";
 import { StyleSheet } from "react-native";
@@ -20,7 +20,7 @@ import {
 } from "../Game.context";
 import flags from "@/constants/flags";
 
-export interface TileConnectedProps {
+export interface TileConnectedProps extends Pick<TileProps, "style"> {
   id: GameTypes.TileId;
   size: SharedValue<number>;
 }
@@ -30,6 +30,7 @@ const staticUpdatePoint = 0.5;
 export default React.memo(function TileConnected({
   id,
   size,
+  style: styleProp,
 }: TileConnectedProps): React.ReactNode {
   const initialState = useTileInitialState(id);
   const animationProgress = useAnimationProgress();
@@ -137,6 +138,8 @@ export default React.memo(function TileConnected({
     let scaleX: number;
     let scaleY: number;
     let opacity: number;
+    let translateX: number = 0;
+    let translateY: number = 0;
 
     function topFromState(state: NonNullable<TileState>): number {
       return size.value * state.position[0];
@@ -160,16 +163,46 @@ export default React.memo(function TileConnected({
       );
 
       if (nextState.value.collapsing) {
-        // We are merging
-        if (nextState.value.collapsing === "x") {
-          scaleY = 1;
-          scaleX = interpolate(animationProgress.value, [0, 1], [1, 0]);
+        if (nextState.value.collapsing === "center") {
+          // Collapse within the first 50% of the animation
+          // Allows for no overlap if something is spawning in the same position
+          const collapsing = interpolate(
+            animationProgress.value,
+            [0, 0.5, 1],
+            [1, 0, 0]
+          );
+
+          // Collapsing/ disappearing
+          scaleX = collapsing;
+          scaleY = collapsing;
         } else {
-          scaleY = interpolate(animationProgress.value, [0, 1], [1, 0]);
-          scaleX = 1;
+          const collapsing = interpolate(
+            animationProgress.value,
+            [0, 1],
+            [1, 0]
+          );
+          const offset = (1 - collapsing) * (size.value / 2);
+
+          if (
+            nextState.value.collapsing === "left" ||
+            nextState.value.collapsing === "right"
+          ) {
+            // Merging horizontally
+            scaleY = 1;
+            scaleX = collapsing;
+            translateX =
+              nextState.value.collapsing === "left" ? -offset : offset;
+          } else {
+            // Merging vertically
+            scaleY = collapsing;
+            scaleX = 1;
+            translateY =
+              nextState.value.collapsing === "top" ? -offset : offset;
+          }
         }
 
-        opacity = interpolate(animationProgress.value, [0, 1], [1, 0]);
+        // opacity = interpolate(animationProgress.value, [0, 1], [1, 0]);
+        opacity = 1;
       } else if (nextState.value.scalePop) {
         // This tile is consuming some other tiles so pop it
         opacity = 1;
@@ -197,7 +230,9 @@ export default React.memo(function TileConnected({
       top = topFromState(nextState.value);
       left = leftFromState(nextState.value);
       opacity = 1;
-      scaleX = animationProgress.value;
+      // Animate in the 2nd half of the animation
+      // Allows for no overlap if something is spawning in the same position
+      scaleX = interpolate(animationProgress.value, [0, 0.5, 1], [0, 0, 1]);
       scaleY = scaleX;
     } else {
       top = -9999;
@@ -210,14 +245,14 @@ export default React.memo(function TileConnected({
     return {
       top,
       left,
-      transform: [{ scaleX }, { scaleY }],
+      transform: [{ translateX }, { translateY }, { scaleX }, { scaleY }],
       opacity,
     };
   });
 
   const style = React.useMemo(
-    () => [styles.container, animatedStyle],
-    [animatedStyle]
+    () => [styles.container, animatedStyle, styleProp],
+    [animatedStyle, styleProp]
   );
 
   return (

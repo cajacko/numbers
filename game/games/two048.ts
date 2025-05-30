@@ -3,6 +3,8 @@ import spawnTile from "@/game/utils/spawnTile";
 import createPositionMap from "@/game/utils/createPositionMap";
 import getAvailablePositions from "@/game/utils/getAvailablePositions";
 
+const supportedActions: Types.Direction[] = ["up", "down", "left", "right"];
+
 export function getColorsFromValue(value: number): {
   backgroundColor: string;
   textColor: string;
@@ -237,6 +239,10 @@ function resolveEndState(
 }
 
 const applyMove: Types.ApplyMove = ({ state, direction, gridSize, rand }) => {
+  if (!supportedActions.includes(direction)) {
+    return state;
+  }
+
   const { tiles, scoreIncrease, changed } = slideTiles(
     state.tiles,
     direction,
@@ -256,6 +262,7 @@ const applyMove: Types.ApplyMove = ({ state, direction, gridSize, rand }) => {
 };
 
 const gameConfig: Types.GameConfig = {
+  supportedActions,
   name: "2048",
   getInitState,
   applyMove,

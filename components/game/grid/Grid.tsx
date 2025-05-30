@@ -2,13 +2,17 @@ import TileConnected from "@/components/game/tile/TileConnected";
 import * as GameTypes from "@/game/Game.types";
 import React from "react";
 import { StyleSheet, View } from "react-native";
-import { GestureDetector, GestureType } from "react-native-gesture-handler";
+import {
+  ComposedGesture,
+  GestureDetector,
+  GestureType,
+} from "react-native-gesture-handler";
 import { useSharedValue } from "react-native-reanimated";
 
 export interface GridProps {
   rows: number;
   columns: number;
-  gesture: GestureType;
+  gesture: GestureType | ComposedGesture;
   tileIds: GameTypes.TileId[];
   availableHeight: number;
   availableWidth: number;
@@ -90,6 +94,19 @@ export default React.memo(function Grid({
     [columns]
   );
 
+  const tiles = React.useMemo(
+    () =>
+      tileIds.map((tileId, i) => (
+        <TileConnected
+          key={`tile-${tileId}`}
+          id={tileId}
+          size={sizeSharedValue}
+          style={{ zIndex: tileIds.length - i }}
+        />
+      )),
+    [tileIds, sizeSharedValue]
+  );
+
   return (
     <GestureDetector gesture={gesture}>
       <View style={containerStyle}>
@@ -102,13 +119,7 @@ export default React.memo(function Grid({
             ))}
           </View>
         ))}
-        {tileIds.map((tileId) => (
-          <TileConnected
-            key={`tile-${tileId}`}
-            id={tileId}
-            size={sizeSharedValue}
-          />
-        ))}
+        {tiles}
       </View>
     </GestureDetector>
   );
