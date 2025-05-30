@@ -163,29 +163,42 @@ export default React.memo(function TileConnected({
       );
 
       if (nextState.value.collapsing) {
-        const collapsing = interpolate(animationProgress.value, [0, 1], [1, 0]);
-        const offset = (1 - collapsing) * (size.value / 2);
+        if (nextState.value.collapsing === "center") {
+          // Collapse within the first 50% of the animation
+          // Allows for no overlap if something is spawning in the same position
+          const collapsing = interpolate(
+            animationProgress.value,
+            [0, 0.5, 1],
+            [1, 0, 0]
+          );
 
-        if (
-          nextState.value.collapsing === "left" ||
-          nextState.value.collapsing === "right"
-        ) {
-          // Merging horizontally
-          scaleY = 1;
-          scaleX = collapsing;
-          translateX = nextState.value.collapsing === "left" ? -offset : offset;
-        } else if (
-          nextState.value.collapsing === "top" ||
-          nextState.value.collapsing === "bottom"
-        ) {
-          // Merging vertically
-          scaleY = collapsing;
-          scaleX = 1;
-          translateY = nextState.value.collapsing === "top" ? -offset : offset;
-        } else {
           // Collapsing/ disappearing
           scaleX = collapsing;
           scaleY = collapsing;
+        } else {
+          const collapsing = interpolate(
+            animationProgress.value,
+            [0, 1],
+            [1, 0]
+          );
+          const offset = (1 - collapsing) * (size.value / 2);
+
+          if (
+            nextState.value.collapsing === "left" ||
+            nextState.value.collapsing === "right"
+          ) {
+            // Merging horizontally
+            scaleY = 1;
+            scaleX = collapsing;
+            translateX =
+              nextState.value.collapsing === "left" ? -offset : offset;
+          } else {
+            // Merging vertically
+            scaleY = collapsing;
+            scaleX = 1;
+            translateY =
+              nextState.value.collapsing === "top" ? -offset : offset;
+          }
         }
 
         // opacity = interpolate(animationProgress.value, [0, 1], [1, 0]);
@@ -217,7 +230,9 @@ export default React.memo(function TileConnected({
       top = topFromState(nextState.value);
       left = leftFromState(nextState.value);
       opacity = 1;
-      scaleX = animationProgress.value;
+      // Animate in the 2nd half of the animation
+      // Allows for no overlap if something is spawning in the same position
+      scaleX = interpolate(animationProgress.value, [0, 0.5, 1], [0, 0, 1]);
       scaleY = scaleX;
     } else {
       top = -9999;
