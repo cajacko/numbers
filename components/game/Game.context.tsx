@@ -23,7 +23,7 @@ export type TileState = {
 };
 
 export type TileAnimatingState = TileState & {
-  collapsing: "x" | "y" | null;
+  collapsing: "x" | "y" | "xy" | null;
   scalePop: boolean;
 };
 
@@ -312,6 +312,23 @@ export function GameProvider(props: { children: React.ReactNode }) {
               scalePop: false,
               backgroundColor,
               textColor,
+            };
+
+            break;
+          }
+          case "remove": {
+            const { tileId } = diff.payload;
+
+            const tile = getTile(tileId, currentState.current);
+
+            if (!tile) {
+              break;
+            }
+
+            newTileStates[tileId] = {
+              ...tile,
+              collapsing: "xy",
+              scalePop: false,
             };
 
             break;

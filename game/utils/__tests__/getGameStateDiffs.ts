@@ -1,7 +1,12 @@
 import getGameStateDiffs from "../getGameStateDiffs";
 import * as Types from "@/game/Game.types";
 
-function createTile(id: number, row: number, column: number, value = 2): Types.Tile {
+function createTile(
+  id: number,
+  row: number,
+  column: number,
+  value = 2
+): Types.Tile {
   return {
     id,
     position: [row, column],
@@ -36,9 +41,17 @@ describe("getGameStateDiffs", () => {
 
   test("detects moved tile", () => {
     const prevTile = createTile(0, 0, 0, 2);
-    const prev: Types.GameState = { tiles: [prevTile], score: 0, state: "playing" };
+    const prev: Types.GameState = {
+      tiles: [prevTile],
+      score: 0,
+      state: "playing",
+    };
     const movedTile = { ...prevTile, position: [0, 1] as Types.Position };
-    const next: Types.GameState = { tiles: [movedTile], score: 0, state: "playing" };
+    const next: Types.GameState = {
+      tiles: [movedTile],
+      score: 0,
+      state: "playing",
+    };
 
     const diffs = getGameStateDiffs(prev, next);
 
@@ -70,7 +83,11 @@ describe("getGameStateDiffs", () => {
       backgroundColor: "bg-4",
       textColor: "text-4",
     };
-    const next: Types.GameState = { tiles: [mergedTile], score: 0, state: "playing" };
+    const next: Types.GameState = {
+      tiles: [mergedTile],
+      score: 0,
+      state: "playing",
+    };
 
     const diffs = getGameStateDiffs(prev, next);
 
@@ -95,5 +112,66 @@ describe("getGameStateDiffs", () => {
         },
       },
     ]);
+  });
+
+  test("detects removed tile (not merged)", () => {
+    const tileA = createTile(0, 0, 0, 2);
+    const tileB = createTile(1, 0, 1, 2);
+    const prev: Types.GameState = {
+      tiles: [tileA, tileB],
+      score: 0,
+      state: "playing",
+    };
+    // tileB is removed, tileA remains unchanged
+    const next: Types.GameState = {
+      tiles: [tileA],
+      score: 0,
+      state: "playing",
+    };
+
+    const diffs = getGameStateDiffs(prev, next);
+
+    expect(diffs).toContainEqual({
+      type: "remove",
+      payload: {
+        tileId: tileB.id,
+      },
+    });
+    // Should not contain a merge diff
+    expect(diffs.find((d) => d.type === "merge")).toBeUndefined();
+  });
+
+  test("does not return remove diff for merged tiles (only merge diff)", () => {
+    const tileA = createTile(0, 0, 0, 2);
+    const tileB = createTile(1, 0, 1, 2);
+    const prev: Types.GameState = {
+      tiles: [tileA, tileB],
+      score: 0,
+      state: "playing",
+    };
+    const mergedTile: Types.Tile = {
+      ...tileA,
+      position: [0, 1],
+      value: 4,
+      mergedFrom: [tileA.id, tileB.id],
+      backgroundColor: "bg-4",
+      textColor: "text-4",
+    };
+    const next: Types.GameState = {
+      tiles: [mergedTile],
+      score: 0,
+      state: "playing",
+    };
+
+    const diffs = getGameStateDiffs(prev, next);
+
+    // Should contain only move and merge, not remove
+    expect(diffs.find((d) => d.type === "remove")).toBeUndefined();
+    expect(diffs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ type: "move" }),
+        expect.objectContaining({ type: "merge" }),
+      ])
+    );
   });
 });

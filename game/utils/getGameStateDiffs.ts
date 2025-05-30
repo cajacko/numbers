@@ -9,6 +9,7 @@ export default function getGameStateDiffs(
   const diffs: Types.Diff[] = [];
 
   const prevTilesMap = createTileMap(prevState.tiles);
+  const nextTilesMap = createTileMap(nextState.tiles);
 
   // Check for moved tiles
   for (const nextTile of nextState.tiles) {
@@ -56,6 +57,27 @@ export default function getGameStateDiffs(
           value: nextTile.value,
           backgroundColor: nextTile.backgroundColor,
           textColor: nextTile.textColor,
+        },
+      });
+    }
+  }
+
+  // Check for removed tiles (not merged)
+  // A tile is removed if it was in prev but not in next, and it is NOT part of a merge (i.e., not in any mergedFrom array)
+  const mergedFromTileIds = new Set<number>();
+  for (const nextTile of nextState.tiles) {
+    if (nextTile.mergedFrom && nextTile.mergedFrom.length > 0) {
+      for (const id of nextTile.mergedFrom) {
+        mergedFromTileIds.add(id);
+      }
+    }
+  }
+  for (const prevTile of prevState.tiles) {
+    if (!nextTilesMap[prevTile.id] && !mergedFromTileIds.has(prevTile.id)) {
+      diffs.push({
+        type: "remove",
+        payload: {
+          tileId: prevTile.id,
         },
       });
     }

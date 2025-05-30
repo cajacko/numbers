@@ -160,13 +160,20 @@ export default React.memo(function TileConnected({
       );
 
       if (nextState.value.collapsing) {
-        // We are merging
+        const collapsing = interpolate(animationProgress.value, [0, 1], [1, 0]);
+
         if (nextState.value.collapsing === "x") {
+          // Merging horizontally
           scaleY = 1;
-          scaleX = interpolate(animationProgress.value, [0, 1], [1, 0]);
-        } else {
-          scaleY = interpolate(animationProgress.value, [0, 1], [1, 0]);
+          scaleX = collapsing;
+        } else if (nextState.value.collapsing === "y") {
+          // Merging vertically
+          scaleY = collapsing;
           scaleX = 1;
+        } else {
+          // Collapsing/ disappearing
+          scaleX = collapsing;
+          scaleY = collapsing;
         }
 
         opacity = interpolate(animationProgress.value, [0, 1], [1, 0]);
