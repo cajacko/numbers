@@ -94,6 +94,19 @@ export default React.memo(function Grid({
     [columns]
   );
 
+  const tiles = React.useMemo(
+    () =>
+      tileIds.map((tileId, i) => (
+        <TileConnected
+          key={`tile-${tileId}`}
+          id={tileId}
+          size={sizeSharedValue}
+          style={{ zIndex: tileIds.length - i }}
+        />
+      )),
+    [tileIds, sizeSharedValue]
+  );
+
   return (
     <GestureDetector gesture={gesture}>
       <View style={containerStyle}>
@@ -106,14 +119,7 @@ export default React.memo(function Grid({
             ))}
           </View>
         ))}
-        {tileIds.map((tileId, i) => (
-          <TileConnected
-            key={`tile-${tileId}`}
-            id={tileId}
-            size={sizeSharedValue}
-            style={{ zIndex: tileIds.length - i }}
-          />
-        ))}
+        {tiles}
       </View>
     </GestureDetector>
   );
