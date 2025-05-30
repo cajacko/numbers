@@ -12,8 +12,8 @@ import {
   withTiming,
 } from "react-native-reanimated";
 
-const duration = 250;
-const pendingDuration = 100;
+const duration = 300;
+const pendingDuration = duration / 2;
 
 export type TileState = {
   position: GameTypes.Position;
@@ -23,7 +23,7 @@ export type TileState = {
 };
 
 export type TileAnimatingState = TileState & {
-  collapsing: "x" | "y" | null;
+  collapsing: "top" | "bottom" | "left" | "right" | "center" | null;
   scalePop: boolean;
 };
 
@@ -50,6 +50,9 @@ type GameContext = {
     }
   ) => void;
   reset: () => void;
+  setRows: (rows: number) => void;
+  setColumns: (columns: number) => void;
+  setGame: (game: GameTypes.GameConfig) => void;
   columns: number;
   rows: number;
   score: SharedValue<number>;
@@ -96,6 +99,12 @@ export function useActionHandlers() {
   return { handleAction, reset };
 }
 
+export function useSetGridSize() {
+  const { setRows, setColumns } = React.useContext(Context) ?? {};
+
+  return { setRows, setColumns };
+}
+
 export function useGridSize() {
   const { columns, rows } = React.useContext(Context) ?? {
     columns: 4,
@@ -121,16 +130,47 @@ export function useGameState(): GameTypes.State {
   return state ?? fallback;
 }
 
+export function useSetGame() {
+  const { setGame, game } = React.useContext(Context) ?? {};
+
+  return {
+    setGame: React.useCallback(
+      (game: GameTypes.GameConfig) => {
+        setGame?.(game);
+      },
+      [setGame]
+    ),
+    game,
+  };
+}
+
+function getCollapsingFromDirection(direction: GameTypes.Direction) {
+  switch (direction) {
+    case "up":
+      return "top";
+    case "down":
+      return "bottom";
+    case "left":
+      return "left";
+    case "right":
+      return "right";
+    default:
+      return null;
+  }
+}
+
 export function GameProvider(props: { children: React.ReactNode }) {
   const { vibrate } = useVibrate();
-  const [game] = React.useState<GameTypes.GameConfig>(defaultGame);
+  const [game, setGame] = React.useState<GameTypes.GameConfig>(defaultGame);
 
   const animationProgress = useSharedValue<number>(0);
 
   const rand = React.useMemo(() => withRand(generateSeed()), []);
 
-  const columns = 4;
-  const rows = 8;
+  const [columns, setColumns] = React.useState<number>(
+    game.defaultGridSize.columns
+  );
+  const [rows, setRows] = React.useState<number>(game.defaultGridSize.rows);
 
   const callbacks = React.useRef<Record<GameTypes.TileId, TileSubscriber>>({});
 
@@ -294,8 +334,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
                 textColor: tile.textColor,
                 position: mergedToTile.position,
                 scalePop: false,
-                collapsing:
-                  direction === "up" || direction === "down" ? "y" : "x",
+                collapsing: getCollapsingFromDirection(direction) ?? "center",
               };
             });
 
@@ -312,6 +351,40 @@ export function GameProvider(props: { children: React.ReactNode }) {
               scalePop: false,
               backgroundColor,
               textColor,
+            };
+
+            break;
+          }
+          case "remove": {
+            const { tileId } = diff.payload;
+
+            const tile = getTile(tileId, currentState.current);
+
+            if (!tile) {
+              break;
+            }
+
+            newTileStates[tileId] = {
+              ...tile,
+              collapsing: "center",
+              scalePop: false,
+            };
+
+            break;
+          }
+          case "value-change": {
+            const { tileId } = diff.payload;
+
+            const tile = getTile(tileId, nextState);
+
+            if (!tile) {
+              break;
+            }
+
+            newTileStates[tileId] = {
+              ...tile,
+              collapsing: null,
+              scalePop: true,
             };
 
             break;
@@ -386,10 +459,13 @@ export function GameProvider(props: { children: React.ReactNode }) {
       animationProgress,
       handleAction,
       reset,
+      setRows,
+      setColumns,
       columns,
       rows,
       score,
       state,
+      setGame,
     }),
     [
       game,
@@ -398,6 +474,8 @@ export function GameProvider(props: { children: React.ReactNode }) {
       getTile,
       handleAction,
       reset,
+      setRows,
+      setColumns,
       columns,
       rows,
       score,
