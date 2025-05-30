@@ -41,7 +41,7 @@ const getInitState: Types.GetInitState = ({ rand, gridSize }) => {
   let state: Types.GameState | null = {
     tiles: [],
     score: 0,
-    status: "playing",
+    status: "user-turn",
   };
 
   state = spawnTile({

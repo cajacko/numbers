@@ -115,7 +115,7 @@ function ConnectedGame(props: GameProps): React.ReactNode {
             fontSize={20}
             maxDigits={10}
           />
-          {gameState !== "playing" && (
+          {(gameState === "won" || gameState === "lost") && (
             <Text style={styles.text}>
               {gameState === "won" ? "You Won!" : "You Lost!"}
             </Text>

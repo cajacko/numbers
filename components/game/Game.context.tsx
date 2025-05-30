@@ -3,6 +3,7 @@ import { defaultGame } from "@/game/games";
 import getGameStateDiffs from "@/game/utils/getGameStateDiffs";
 import useVibrate from "@/hooks/useVibrate";
 import withRand, { generateSeed } from "@/utils/withRand";
+import { types } from "@babel/core";
 import React from "react";
 import {
   runOnJS,
@@ -124,7 +125,7 @@ export function useScore() {
 }
 
 export function useGameState(): GameTypes.Status {
-  const fallback = "playing";
+  const fallback = "user-turn";
   const { status } = React.useContext(Context) ?? {};
 
   return status ?? fallback;
@@ -174,17 +175,19 @@ export function GameProvider(props: { children: React.ReactNode }) {
 
   const callbacks = React.useRef<Record<GameTypes.TileId, TileSubscriber>>({});
 
-  const currentState = React.useRef(
+  const currentStateRef = React.useRef(
     game.getInitState({ gridSize: { columns, rows }, rand })
   );
 
-  const score = useSharedValue<number>(currentState.current.score);
+  const nextStateRef = React.useRef<GameTypes.GameState | null>(null);
+
+  const score = useSharedValue<number>(currentStateRef.current.score);
   const [status, setStatus] = React.useState<GameTypes.Status>(
-    currentState.current.status
+    currentStateRef.current.status
   );
 
   const getTile = React.useCallback<GameContext["getTile"]>(
-    (tileId, state = currentState.current) => {
+    (tileId, state = currentStateRef.current) => {
       const tile = state.tiles.find((tile) => tile.id === tileId);
 
       if (!tile) return null;
@@ -214,8 +217,8 @@ export function GameProvider(props: { children: React.ReactNode }) {
   );
 
   const setAllToCurrentState = React.useCallback(() => {
-    setStatus(currentState.current.status);
-    score.value = currentState.current.score;
+    setStatus(currentStateRef.current.status);
+    score.value = currentStateRef.current.score;
 
     Object.entries(callbacks.current).forEach(([tileIdString, callback]) => {
       const tileId = parseInt(tileIdString);
@@ -230,6 +233,18 @@ export function GameProvider(props: { children: React.ReactNode }) {
 
   const handleAction = React.useCallback<GameContext["handleAction"]>(
     (action, options) => {
+      // If there's a next state we're processing and it's not a user turn, we don't want to process
+      // the action, or if the current state is not a user turn.
+      if (nextStateRef.current) {
+        if (nextStateRef.current.status !== "user-turn" && action !== "tick")
+          return;
+      } else if (
+        currentStateRef.current.status !== "user-turn" &&
+        action !== "tick"
+      ) {
+        return;
+      }
+
       const animationDuration = options?.animationDuration ?? duration;
 
       vibrate?.();
@@ -246,14 +261,25 @@ export function GameProvider(props: { children: React.ReactNode }) {
       const nextState = game.applyAction({
         action,
         gridSize: { columns, rows },
-        state: currentState.current,
+        state: currentStateRef.current,
         rand,
       });
 
+      nextStateRef.current = nextState;
+
       function postAction() {
-        currentState.current = nextState;
+        currentStateRef.current = nextState;
+        nextStateRef.current = null;
 
         setAllToCurrentState();
+
+        if (currentStateRef.current.status === "ai-turn") {
+          pendingActions.current = [];
+
+          handleAction("tick");
+
+          return;
+        }
 
         if (pendingActions.current.length > 0) {
           const nextAction = pendingActions.current.shift();
@@ -266,7 +292,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
         }
       }
 
-      const diffs = getGameStateDiffs(currentState.current, nextState);
+      const diffs = getGameStateDiffs(currentStateRef.current, nextState);
 
       const newTileStates: Record<
         GameTypes.TileId,
@@ -358,7 +384,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
           case "remove": {
             const { tileId } = diff.payload;
 
-            const tile = getTile(tileId, currentState.current);
+            const tile = getTile(tileId, currentStateRef.current);
 
             if (!tile) {
               break;
@@ -428,13 +454,13 @@ export function GameProvider(props: { children: React.ReactNode }) {
   );
 
   const reset = React.useCallback<GameContext["reset"]>(() => {
-    currentState.current = game.getInitState({
+    currentStateRef.current = game.getInitState({
       gridSize: { columns, rows },
       rand,
     });
 
-    setStatus(currentState.current.status);
-    score.value = currentState.current.score;
+    setStatus(currentStateRef.current.status);
+    score.value = currentStateRef.current.score;
 
     setAllToCurrentState();
   }, [game, rand, setAllToCurrentState, rows, columns, score]);

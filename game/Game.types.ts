@@ -13,13 +13,12 @@ export type Tile = {
   textColor: string;
 };
 
-export type Status = "playing" | "won" | "lost";
+export type Status = "user-turn" | "ai-turn" | "won" | "lost";
 
 export type GameState = {
   tiles: Tile[];
   score: number;
   status: Status;
-  // turn: "player" | "computer";
 };
 
 export type Action = "up" | "down" | "left" | "right" | "tap" | "tick";

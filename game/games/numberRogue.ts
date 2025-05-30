@@ -1,6 +1,10 @@
 import * as Types from "@/game/Game.types";
 import getFreeTileId from "@/game/utils/getFreeTileId";
 
+type InternalState = {
+  hasActed: boolean;
+};
+
 const supportedActions: Types.Action[] = [
   "up",
   "down",
@@ -17,7 +21,7 @@ const getInitState: Types.GetInitState = ({ rand, gridSize }) => {
   let state: Types.GameState | null = {
     tiles: [],
     score: 0,
-    status: "playing",
+    status: "user-turn",
   };
 
   state = {
@@ -333,7 +337,13 @@ function dealDamage({
 }
 
 // Deals 1 damage to all adjacent enemies to the hero (orthogonal only)
-function resolveTapAction(state: Types.GameState): Types.GameState {
+function resolveTapAction(
+  state: Types.GameState,
+  internalState: InternalState
+): Types.GameState {
+  const damageValue = 1;
+  internalState.hasActed = true;
+
   const heroTile = getHeroTile(state);
   const heroPosition = heroTile.position;
 
@@ -346,7 +356,7 @@ function resolveTapAction(state: Types.GameState): Types.GameState {
 
   const damage: Damage[] = adjacentPositions.map((position) => ({
     position,
-    value: 1, // Deal 1 damage
+    value: damageValue,
     target: "enemy", // Target only enemies
   }));
 
@@ -356,15 +366,105 @@ function resolveTapAction(state: Types.GameState): Types.GameState {
   });
 }
 
+function resolveTurn({
+  state,
+  internalState,
+}: {
+  state: Types.GameState;
+  internalState: InternalState;
+}): Types.GameState {
+  if (state.status === "ai-turn") {
+    return {
+      ...state,
+      status: "user-turn",
+    };
+  }
+
+  if (state.status === "user-turn" && internalState.hasActed) {
+    return {
+      ...state,
+      status: "ai-turn",
+    };
+  }
+
+  return state; // No change in status
+}
+
+// Move all enemies 1 adjacent place orthogonally towards the hero. If the enemy is in the same
+// position as the hero, resolve a collision, if there is an choice of direction, choose a random
+// one. Do not move the hero
+function resolveTick(
+  state: Types.GameState,
+  rand: Types.Rand,
+  gridSize: Types.GridSize
+): Types.GameState {
+  const heroPosition = getHeroPosition(state);
+  let newState = { ...state };
+
+  const enemyTiles = state.tiles.filter((tile) => tileType(tile) === "enemy");
+
+  for (const enemy of enemyTiles) {
+    const [erow, ecol] = enemy.position;
+    const [hrow, hcol] = heroPosition;
+
+    const possibleMoves: Types.Position[] = [];
+
+    if (erow > 0 && erow > hrow) possibleMoves.push([erow - 1, ecol]); // up
+    if (erow < gridSize.rows - 1 && erow < hrow)
+      possibleMoves.push([erow + 1, ecol]); // down
+    if (ecol > 0 && ecol > hcol) possibleMoves.push([erow, ecol - 1]); // left
+    if (ecol < gridSize.columns - 1 && ecol < hcol)
+      possibleMoves.push([erow, ecol + 1]); // right
+
+    const moveTo = possibleMoves.find((pos) => {
+      const occupiedTile = getTileAtPosition({
+        state: newState,
+        position: pos,
+      });
+      return !occupiedTile || tileType(occupiedTile) === "hero";
+    });
+
+    if (!moveTo) continue;
+
+    const tileAtDest = getTileAtPosition({ state: newState, position: moveTo });
+
+    if (tileAtDest && tileType(tileAtDest) === "hero") {
+      newState = resolveHeroEnemyCollision({
+        state: newState,
+        position: moveTo,
+        enemyTile: enemy,
+      });
+    } else {
+      // Move enemy
+      newState = {
+        ...newState,
+        tiles: newState.tiles.map((tile) =>
+          tile.id === enemy.id ? { ...tile, position: moveTo } : tile
+        ),
+      };
+    }
+  }
+
+  return newState;
+}
+
 const applyAction: Types.ApplyAction = ({ state, action, gridSize, rand }) => {
   if (!supportedActions.includes(action)) {
     return state; // Invalid action, return current state
   }
 
+  const internalState: InternalState = {
+    hasActed: false,
+  };
   let nextState: Types.GameState = { ...state };
 
   if (action === "tap") {
-    nextState = resolveTapAction(nextState);
+    nextState = resolveTapAction(nextState, internalState);
+  }
+
+  if (action === "tick") {
+    internalState.hasActed = true;
+    nextState = resolveTick(nextState, rand, gridSize);
   }
 
   const nextHeroPosition = getNextHeroPosition({
@@ -374,6 +474,8 @@ const applyAction: Types.ApplyAction = ({ state, action, gridSize, rand }) => {
   });
 
   if (nextHeroPosition) {
+    internalState.hasActed = true;
+
     const tileAtNextPosition = getTileAtPosition({
       state,
       position: nextHeroPosition,
@@ -390,11 +492,14 @@ const applyAction: Types.ApplyAction = ({ state, action, gridSize, rand }) => {
         enemyTile: tileAtNextPosition,
       });
     }
-  } else {
-    // console.log("Invalid move, hero cannot move in that direction.", direction);
   }
 
   nextState = resolveEndState(nextState);
+
+  nextState = resolveTurn({
+    state: nextState,
+    internalState,
+  });
 
   return nextState;
 };

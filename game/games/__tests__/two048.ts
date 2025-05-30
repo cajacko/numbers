@@ -417,7 +417,7 @@ const descriptions: {
           { tileId: 15, value: 256, row: 3, column: 3 },
           { tileId: 16, value: 2, row: 0, column: 3 },
         ],
-        expectedStatus: "playing",
+        expectedStatus: "user-turn",
       },
     ],
   },
@@ -461,7 +461,7 @@ function stateFromTilePositions(positions: TilePosition[]): Types.GameState {
   return {
     tiles: tiles.sort((a, b) => a.id - b.id),
     score: 0,
-    status: "playing",
+    status: "user-turn",
   };
 }
 
