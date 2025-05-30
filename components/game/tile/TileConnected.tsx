@@ -138,6 +138,8 @@ export default React.memo(function TileConnected({
     let scaleX: number;
     let scaleY: number;
     let opacity: number;
+    let translateX: number = 0;
+    let translateY: number = 0;
 
     function topFromState(state: NonNullable<TileState>): number {
       return size.value * state.position[0];
@@ -162,22 +164,32 @@ export default React.memo(function TileConnected({
 
       if (nextState.value.collapsing) {
         const collapsing = interpolate(animationProgress.value, [0, 1], [1, 0]);
+        const offset = (1 - collapsing) * (size.value / 2);
 
-        if (nextState.value.collapsing === "x") {
+        if (
+          nextState.value.collapsing === "left" ||
+          nextState.value.collapsing === "right"
+        ) {
           // Merging horizontally
           scaleY = 1;
           scaleX = collapsing;
-        } else if (nextState.value.collapsing === "y") {
+          translateX = nextState.value.collapsing === "left" ? -offset : offset;
+        } else if (
+          nextState.value.collapsing === "top" ||
+          nextState.value.collapsing === "bottom"
+        ) {
           // Merging vertically
           scaleY = collapsing;
           scaleX = 1;
+          translateY = nextState.value.collapsing === "top" ? -offset : offset;
         } else {
           // Collapsing/ disappearing
           scaleX = collapsing;
           scaleY = collapsing;
         }
 
-        opacity = interpolate(animationProgress.value, [0, 1], [1, 0]);
+        // opacity = interpolate(animationProgress.value, [0, 1], [1, 0]);
+        opacity = 1;
       } else if (nextState.value.scalePop) {
         // This tile is consuming some other tiles so pop it
         opacity = 1;
@@ -218,7 +230,7 @@ export default React.memo(function TileConnected({
     return {
       top,
       left,
-      transform: [{ scaleX }, { scaleY }],
+      transform: [{ translateX }, { translateY }, { scaleX }, { scaleY }],
       opacity,
     };
   });
