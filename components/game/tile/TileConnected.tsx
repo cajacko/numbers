@@ -1,4 +1,4 @@
-import Tile from "@/components/game/tile/Tile";
+import Tile, { TileProps } from "@/components/game/tile/Tile";
 import * as GameTypes from "@/game/Game.types";
 import React from "react";
 import { StyleSheet } from "react-native";
@@ -20,7 +20,7 @@ import {
 } from "../Game.context";
 import flags from "@/constants/flags";
 
-export interface TileConnectedProps {
+export interface TileConnectedProps extends Pick<TileProps, "style"> {
   id: GameTypes.TileId;
   size: SharedValue<number>;
 }
@@ -30,6 +30,7 @@ const staticUpdatePoint = 0.5;
 export default React.memo(function TileConnected({
   id,
   size,
+  style: styleProp,
 }: TileConnectedProps): React.ReactNode {
   const initialState = useTileInitialState(id);
   const animationProgress = useAnimationProgress();
@@ -223,8 +224,8 @@ export default React.memo(function TileConnected({
   });
 
   const style = React.useMemo(
-    () => [styles.container, animatedStyle],
-    [animatedStyle]
+    () => [styles.container, animatedStyle, styleProp],
+    [animatedStyle, styleProp]
   );
 
   return (

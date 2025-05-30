@@ -12,8 +12,8 @@ import {
   withTiming,
 } from "react-native-reanimated";
 
-const duration = 250;
-const pendingDuration = 100;
+const duration = 1000;
+const pendingDuration = duration / 2;
 
 export type TileState = {
   position: GameTypes.Position;

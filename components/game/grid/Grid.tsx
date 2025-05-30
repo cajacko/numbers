@@ -106,11 +106,12 @@ export default React.memo(function Grid({
             ))}
           </View>
         ))}
-        {tileIds.map((tileId) => (
+        {tileIds.map((tileId, i) => (
           <TileConnected
             key={`tile-${tileId}`}
             id={tileId}
             size={sizeSharedValue}
+            style={{ zIndex: tileIds.length - i }}
           />
         ))}
       </View>
