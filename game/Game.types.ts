@@ -88,6 +88,20 @@ export type DiffRemove = CreateDiffType<
   }
 >;
 
-export type Diff = DiffMove | DiffMerge | DiffSpawn | DiffRemove;
+export type DiffValueChange = CreateDiffType<
+  "value-change",
+  {
+    tileId: TileId;
+    prevValue: Value;
+    newValue: Value;
+  }
+>;
+
+export type Diff =
+  | DiffMove
+  | DiffMerge
+  | DiffSpawn
+  | DiffRemove
+  | DiffValueChange;
 
 export type Rand = () => number;

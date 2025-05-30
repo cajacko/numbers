@@ -174,4 +174,68 @@ describe("getGameStateDiffs", () => {
       ])
     );
   });
+
+  test("detects value change (no move, no merge)", () => {
+    const prevTile = createTile(0, 0, 0, 2);
+    const prev: Types.GameState = {
+      tiles: [prevTile],
+      score: 0,
+      state: "playing",
+    };
+    // Only the value changes, position and id stay the same, no merge
+    const changedTile = { ...prevTile, value: 4 };
+    const next: Types.GameState = {
+      tiles: [changedTile],
+      score: 0,
+      state: "playing",
+    };
+
+    const diffs = getGameStateDiffs(prev, next);
+
+    expect(diffs).toContainEqual({
+      type: "value-change",
+      payload: {
+        tileId: changedTile.id,
+        prevValue: prevTile.value,
+        newValue: changedTile.value,
+      },
+    });
+    // Should not contain move or merge
+    expect(diffs.find((d) => d.type === "move")).toBeUndefined();
+    expect(diffs.find((d) => d.type === "merge")).toBeUndefined();
+  });
+
+  test("does not return value-change if value changed due to merge", () => {
+    const tileA = createTile(0, 0, 0, 2);
+    const tileB = createTile(1, 0, 1, 2);
+    const prev: Types.GameState = {
+      tiles: [tileA, tileB],
+      score: 0,
+      state: "playing",
+    };
+    const mergedTile: Types.Tile = {
+      ...tileA,
+      position: [0, 1],
+      value: 4,
+      mergedFrom: [tileA.id, tileB.id],
+      backgroundColor: "bg-4",
+      textColor: "text-4",
+    };
+    const next: Types.GameState = {
+      tiles: [mergedTile],
+      score: 0,
+      state: "playing",
+    };
+
+    const diffs = getGameStateDiffs(prev, next);
+
+    // Should not contain value-change, only move and merge
+    expect(diffs.find((d) => d.type === "value-change")).toBeUndefined();
+    expect(diffs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ type: "move" }),
+        expect.objectContaining({ type: "merge" }),
+      ])
+    );
+  });
 });

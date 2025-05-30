@@ -333,6 +333,23 @@ export function GameProvider(props: { children: React.ReactNode }) {
 
             break;
           }
+          case "value-change": {
+            const { tileId } = diff.payload;
+
+            const tile = getTile(tileId, nextState);
+
+            if (!tile) {
+              break;
+            }
+
+            newTileStates[tileId] = {
+              ...tile,
+              collapsing: null,
+              scalePop: true,
+            };
+
+            break;
+          }
         }
       });
 

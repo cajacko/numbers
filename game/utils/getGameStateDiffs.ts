@@ -83,5 +83,25 @@ export default function getGameStateDiffs(
     }
   }
 
+  // Check for value changes (not due to merge or move)
+  for (const nextTile of nextState.tiles) {
+    const prevTile = prevTilesMap[nextTile.id];
+    if (
+      prevTile &&
+      prevTile.value !== nextTile.value &&
+      isEqual(prevTile.position, nextTile.position) &&
+      (!nextTile.mergedFrom || nextTile.mergedFrom.length === 0)
+    ) {
+      diffs.push({
+        type: "value-change",
+        payload: {
+          tileId: nextTile.id,
+          prevValue: prevTile.value,
+          newValue: nextTile.value,
+        },
+      });
+    }
+  }
+
   return diffs;
 }
