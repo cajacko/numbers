@@ -27,16 +27,20 @@ export default function getGameStateDiffs(
     }
   }
 
-  // Check for merged tiles
+  // Check for merged tiles (only if mergedFrom changed from prev to next)
   for (const nextTile of nextState.tiles) {
     const prevTile = prevTilesMap[nextTile.id];
 
-    if (nextTile.mergedFrom && nextTile.mergedFrom.length > 0) {
+    const prevMergedFrom = prevTile?.mergedFrom ?? [];
+    const nextMergedFrom = nextTile.mergedFrom ?? [];
+
+    // Only emit a merge diff if mergedFrom is non-empty and has changed from prev to next
+    if (nextMergedFrom.length > 0 && !isEqual(prevMergedFrom, nextMergedFrom)) {
       diffs.push({
         type: "merge",
         payload: {
           mergedToTileId: nextTile.id,
-          mergedFromTileIds: nextTile.mergedFrom,
+          mergedFromTileIds: nextTile.mergedFrom!,
           newValue: nextTile.value,
           prevValue: prevTile.value,
           mergedToTileBackgroundColor: nextTile.backgroundColor,

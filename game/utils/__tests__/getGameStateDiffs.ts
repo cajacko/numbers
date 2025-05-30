@@ -238,4 +238,46 @@ describe("getGameStateDiffs", () => {
       ])
     );
   });
+
+  test("does not return merge diff if mergedFrom did not change (should only return move)", () => {
+    // Simulate a tile that already had mergedFrom in prev, and in next it just moves but mergedFrom is unchanged
+    const prevTile: Types.Tile = {
+      id: 0,
+      position: [0, 0],
+      value: 4,
+      mergedFrom: [1, 2],
+      backgroundColor: "bg-4",
+      textColor: "text-4",
+    };
+    const nextTile: Types.Tile = {
+      ...prevTile,
+      position: [0, 1], // moved
+      // mergedFrom is the same as before
+    };
+    const prev: Types.GameState = {
+      tiles: [prevTile],
+      score: 0,
+      state: "playing",
+    };
+    const next: Types.GameState = {
+      tiles: [nextTile],
+      score: 0,
+      state: "playing",
+    };
+
+    const diffs = getGameStateDiffs(prev, next);
+
+    // Should only return move, not merge
+    expect(diffs).toEqual([
+      {
+        type: "move",
+        payload: {
+          tileId: nextTile.id,
+          fromPosition: prevTile.position,
+          toPosition: nextTile.position,
+        },
+      },
+    ]);
+    expect(diffs.find((d) => d.type === "merge")).toBeUndefined();
+  });
 });
