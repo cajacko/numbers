@@ -19,9 +19,13 @@ function createTile(
 
 describe("getGameStateDiffs", () => {
   test("detects spawned tile", () => {
-    const prev: Types.GameState = { tiles: [], score: 0, state: "playing" };
+    const prev: Types.GameState = { tiles: [], score: 0, status: "playing" };
     const tile = createTile(0, 0, 0, 2);
-    const next: Types.GameState = { tiles: [tile], score: 0, state: "playing" };
+    const next: Types.GameState = {
+      tiles: [tile],
+      score: 0,
+      status: "playing",
+    };
 
     const diffs = getGameStateDiffs(prev, next);
 
@@ -44,13 +48,13 @@ describe("getGameStateDiffs", () => {
     const prev: Types.GameState = {
       tiles: [prevTile],
       score: 0,
-      state: "playing",
+      status: "playing",
     };
     const movedTile = { ...prevTile, position: [0, 1] as Types.Position };
     const next: Types.GameState = {
       tiles: [movedTile],
       score: 0,
-      state: "playing",
+      status: "playing",
     };
 
     const diffs = getGameStateDiffs(prev, next);
@@ -73,7 +77,7 @@ describe("getGameStateDiffs", () => {
     const prev: Types.GameState = {
       tiles: [tileA, tileB],
       score: 0,
-      state: "playing",
+      status: "playing",
     };
     const mergedTile: Types.Tile = {
       ...tileA,
@@ -86,7 +90,7 @@ describe("getGameStateDiffs", () => {
     const next: Types.GameState = {
       tiles: [mergedTile],
       score: 0,
-      state: "playing",
+      status: "playing",
     };
 
     const diffs = getGameStateDiffs(prev, next);
@@ -120,13 +124,13 @@ describe("getGameStateDiffs", () => {
     const prev: Types.GameState = {
       tiles: [tileA, tileB],
       score: 0,
-      state: "playing",
+      status: "playing",
     };
     // tileB is removed, tileA remains unchanged
     const next: Types.GameState = {
       tiles: [tileA],
       score: 0,
-      state: "playing",
+      status: "playing",
     };
 
     const diffs = getGameStateDiffs(prev, next);
@@ -147,7 +151,7 @@ describe("getGameStateDiffs", () => {
     const prev: Types.GameState = {
       tiles: [tileA, tileB],
       score: 0,
-      state: "playing",
+      status: "playing",
     };
     const mergedTile: Types.Tile = {
       ...tileA,
@@ -160,7 +164,7 @@ describe("getGameStateDiffs", () => {
     const next: Types.GameState = {
       tiles: [mergedTile],
       score: 0,
-      state: "playing",
+      status: "playing",
     };
 
     const diffs = getGameStateDiffs(prev, next);
@@ -180,14 +184,14 @@ describe("getGameStateDiffs", () => {
     const prev: Types.GameState = {
       tiles: [prevTile],
       score: 0,
-      state: "playing",
+      status: "playing",
     };
     // Only the value changes, position and id stay the same, no merge
     const changedTile = { ...prevTile, value: 4 };
     const next: Types.GameState = {
       tiles: [changedTile],
       score: 0,
-      state: "playing",
+      status: "playing",
     };
 
     const diffs = getGameStateDiffs(prev, next);
@@ -211,7 +215,7 @@ describe("getGameStateDiffs", () => {
     const prev: Types.GameState = {
       tiles: [tileA, tileB],
       score: 0,
-      state: "playing",
+      status: "playing",
     };
     const mergedTile: Types.Tile = {
       ...tileA,
@@ -224,7 +228,7 @@ describe("getGameStateDiffs", () => {
     const next: Types.GameState = {
       tiles: [mergedTile],
       score: 0,
-      state: "playing",
+      status: "playing",
     };
 
     const diffs = getGameStateDiffs(prev, next);
@@ -257,12 +261,12 @@ describe("getGameStateDiffs", () => {
     const prev: Types.GameState = {
       tiles: [prevTile],
       score: 0,
-      state: "playing",
+      status: "playing",
     };
     const next: Types.GameState = {
       tiles: [nextTile],
       score: 0,
-      state: "playing",
+      status: "playing",
     };
 
     const diffs = getGameStateDiffs(prev, next);

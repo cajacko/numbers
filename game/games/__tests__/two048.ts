@@ -22,10 +22,10 @@ const descriptions: {
   cases: {
     title: string;
     prevTiles: TilePosition[];
-    applyAction: Types.Direction;
+    applyAction: Types.Action;
     randomAvailablePosition: Types.Position | null;
     expectedPositions?: TilePosition[];
-    expectedState?: Types.GameState["state"];
+    expectedStatus?: Types.GameState["status"];
     seed?: string | number;
     gridSize: Types.GridSize;
   }[];
@@ -305,9 +305,7 @@ const descriptions: {
         title: "Spawns a 4 tile when random >= 0.9",
         gridSize: { rows: 4, columns: 4 },
         randomAvailablePosition: [3, 3],
-        prevTiles: [
-          { tileId: 0, value: 2, row: 1, column: 0 },
-        ],
+        prevTiles: [{ tileId: 0, value: 2, row: 1, column: 0 }],
         applyAction: "up",
         seed: "h",
         expectedPositions: [
@@ -333,7 +331,7 @@ const descriptions: {
           { tileId: 0, value: 2048, row: 0, column: 0 },
           { tileId: 2, value: 2, row: 3, column: 3 },
         ],
-        expectedState: "won",
+        expectedStatus: "won",
       },
       {
         title: "Game lost when board is full and no moves left",
@@ -376,7 +374,7 @@ const descriptions: {
           { tileId: 14, value: 4, row: 3, column: 2 },
           { tileId: 15, value: 2, row: 3, column: 3 },
         ],
-        expectedState: "lost",
+        expectedStatus: "lost",
       },
       {
         title: "Board full but moves left keeps playing",
@@ -419,7 +417,7 @@ const descriptions: {
           { tileId: 15, value: 256, row: 3, column: 3 },
           { tileId: 16, value: 2, row: 0, column: 3 },
         ],
-        expectedState: "playing",
+        expectedStatus: "playing",
       },
     ],
   },
@@ -441,7 +439,7 @@ const descriptions: {
           { tileId: 2, value: 2, row: 0, column: 1 },
           { tileId: 3, value: 2, row: 1, column: 1 },
         ],
-        expectedState: "won",
+        expectedStatus: "won",
       },
     ],
   },
@@ -463,7 +461,7 @@ function stateFromTilePositions(positions: TilePosition[]): Types.GameState {
   return {
     tiles: tiles.sort((a, b) => a.id - b.id),
     score: 0,
-    state: "playing",
+    status: "playing",
   };
 }
 
@@ -491,7 +489,7 @@ describe("two048 game", () => {
         ({
           title,
           applyAction,
-          expectedState,
+          expectedStatus,
           prevTiles,
           expectedPositions,
           randomAvailablePosition,
@@ -507,15 +505,15 @@ describe("two048 game", () => {
 
             const prevState = stateFromTilePositions(prevTiles);
 
-            const nextState = two048.applyMove({
+            const nextState = two048.applyAction({
               state: prevState,
-              direction: applyAction,
+              action: applyAction,
               gridSize,
               rand,
             });
 
-            if (expectedState) {
-              expect(nextState.state).toBe(expectedState);
+            if (expectedStatus) {
+              expect(nextState.status).toBe(expectedStatus);
             }
 
             if (expectedPositions) {

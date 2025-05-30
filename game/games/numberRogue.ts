@@ -1,12 +1,13 @@
 import * as Types from "@/game/Game.types";
 import getFreeTileId from "@/game/utils/getFreeTileId";
 
-const supportedActions: Types.Direction[] = [
+const supportedActions: Types.Action[] = [
   "up",
   "down",
   "left",
   "right",
   "tap",
+  "tick",
 ];
 
 const heroColor = "white";
@@ -16,7 +17,7 @@ const getInitState: Types.GetInitState = ({ rand, gridSize }) => {
   let state: Types.GameState | null = {
     tiles: [],
     score: 0,
-    state: "playing",
+    status: "playing",
   };
 
   state = {
@@ -83,17 +84,17 @@ function getHeroPosition(state: Types.GameState): Types.Position {
 // grid. We don't care about other tiles at this stage
 function getNextHeroPosition({
   state,
-  direction,
+  action,
   gridSize,
 }: {
   state: Types.GameState;
-  direction: Types.Direction;
+  action: Types.Action;
   gridSize: Types.GridSize;
 }): Types.Position | null {
   const heroPosition = getHeroPosition(state);
 
   const nextPosition: Types.Position = [...heroPosition];
-  switch (direction) {
+  switch (action) {
     case "up":
       nextPosition[0] -= 1;
       break;
@@ -246,11 +247,11 @@ function resolveEndState(state: Types.GameState): Types.GameState {
   );
 
   if (!heroTile) {
-    return { ...state, state: "lost" }; // No hero left, game lost
+    return { ...state, status: "lost" }; // No hero left, game lost
   }
 
   if (enemyTiles.length === 0) {
-    return { ...state, state: "won" }; // No enemies left, game won
+    return { ...state, status: "won" }; // No enemies left, game won
   }
 
   return state; // Game continues
@@ -355,20 +356,20 @@ function resolveTapAction(state: Types.GameState): Types.GameState {
   });
 }
 
-const applyMove: Types.ApplyMove = ({ state, direction, gridSize, rand }) => {
-  if (!supportedActions.includes(direction)) {
+const applyAction: Types.ApplyAction = ({ state, action, gridSize, rand }) => {
+  if (!supportedActions.includes(action)) {
     return state; // Invalid action, return current state
   }
 
   let nextState: Types.GameState = { ...state };
 
-  if (direction === "tap") {
+  if (action === "tap") {
     nextState = resolveTapAction(nextState);
   }
 
   const nextHeroPosition = getNextHeroPosition({
     state,
-    direction,
+    action,
     gridSize,
   });
 
@@ -402,10 +403,10 @@ const gameConfig: Types.GameConfig = {
   supportedActions,
   name: "Number Rogue",
   getInitState,
-  applyMove,
+  applyAction,
   defaultGridSize: {
-    rows: 4,
-    columns: 4,
+    rows: 5,
+    columns: 5,
   },
 };
 

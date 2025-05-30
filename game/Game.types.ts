@@ -13,15 +13,16 @@ export type Tile = {
   textColor: string;
 };
 
-export type State = "playing" | "won" | "lost";
+export type Status = "playing" | "won" | "lost";
 
 export type GameState = {
   tiles: Tile[];
   score: number;
-  state: State;
+  status: Status;
+  // turn: "player" | "computer";
 };
 
-export type Direction = "up" | "down" | "left" | "right" | "tap";
+export type Action = "up" | "down" | "left" | "right" | "tap" | "tick";
 
 export type GridSize = {
   rows: number;
@@ -33,18 +34,18 @@ export type GetInitState = (props: {
   rand: Rand;
 }) => GameState;
 
-export type ApplyMove = (props: {
+export type ApplyAction = (props: {
   state: GameState;
-  direction: Direction;
+  action: Action;
   gridSize: GridSize;
   rand: Rand;
 }) => GameState;
 
 export type GameConfig = {
-  supportedActions: Direction[];
+  supportedActions: Action[];
   name: string;
   getInitState: GetInitState;
-  applyMove: ApplyMove;
+  applyAction: ApplyAction;
   defaultGridSize: GridSize;
 };
 

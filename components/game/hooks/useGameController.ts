@@ -62,16 +62,16 @@ export default function useGameController() {
           const absX = Math.abs(translationX);
           const absY = Math.abs(translationY);
 
-          let direction: GameTypes.Direction | null = null;
+          let action: GameTypes.Action | null = null;
 
           if (absX > absY && absX > 20) {
-            direction = translationX > 0 ? "right" : "left";
+            action = translationX > 0 ? "right" : "left";
           } else if (absY > 20) {
-            direction = translationY > 0 ? "down" : "up";
+            action = translationY > 0 ? "down" : "up";
           }
 
-          if (direction && handleAction) {
-            runOnJS(handleAction)(direction);
+          if (action && handleAction) {
+            runOnJS(handleAction)(action);
           }
         }),
     [handleAction]

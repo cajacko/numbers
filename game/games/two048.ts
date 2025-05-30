@@ -3,7 +3,7 @@ import spawnTile from "@/game/utils/spawnTile";
 import createPositionMap from "@/game/utils/createPositionMap";
 import getAvailablePositions from "@/game/utils/getAvailablePositions";
 
-const supportedActions: Types.Direction[] = ["up", "down", "left", "right"];
+const supportedActions: Types.Action[] = ["up", "down", "left", "right"];
 
 export function getColorsFromValue(value: number): {
   backgroundColor: string;
@@ -41,7 +41,7 @@ const getInitState: Types.GetInitState = ({ rand, gridSize }) => {
   let state: Types.GameState | null = {
     tiles: [],
     score: 0,
-    state: "playing",
+    status: "playing",
   };
 
   state = spawnTile({
@@ -77,7 +77,7 @@ const getInitState: Types.GetInitState = ({ rand, gridSize }) => {
 
 function slideTiles(
   tiles: Types.Tile[],
-  direction: Types.Direction,
+  action: Types.Action,
   gridSize: Types.GridSize
 ) {
   const working: Types.Tile[] = tiles.map((t) => ({ ...t, mergedFrom: null }));
@@ -111,16 +111,16 @@ function slideTiles(
 
   const { rows, columns } = gridSize;
 
-  if (direction === "up" || direction === "down") {
+  if (action === "up" || action === "down") {
     for (let col = 0; col < columns; col++) {
       const columnTiles: Types.Tile[] = [];
-      const rIter = direction === "up" ? [0, rows, 1] : [rows - 1, -1, -1];
+      const rIter = action === "up" ? [0, rows, 1] : [rows - 1, -1, -1];
       for (let r = rIter[0]; r !== rIter[1]; r += rIter[2]) {
         const tile = positionMap[r]?.[col];
         if (tile) columnTiles.push(tile);
       }
 
-      let targetRow = direction === "up" ? 0 : rows - 1;
+      let targetRow = action === "up" ? 0 : rows - 1;
       let lastTile: Types.Tile | null = null;
 
       columnTiles.forEach((tile) => {
@@ -129,21 +129,20 @@ function slideTiles(
         } else {
           move(tile, targetRow, col);
           lastTile = tile;
-          targetRow += direction === "up" ? 1 : -1;
+          targetRow += action === "up" ? 1 : -1;
         }
       });
     }
   } else {
     for (let row = 0; row < rows; row++) {
       const rowTiles: Types.Tile[] = [];
-      const cIter =
-        direction === "left" ? [0, columns, 1] : [columns - 1, -1, -1];
+      const cIter = action === "left" ? [0, columns, 1] : [columns - 1, -1, -1];
       for (let c = cIter[0]; c !== cIter[1]; c += cIter[2]) {
         const tile = positionMap[row]?.[c];
         if (tile) rowTiles.push(tile);
       }
 
-      let targetCol = direction === "left" ? 0 : columns - 1;
+      let targetCol = action === "left" ? 0 : columns - 1;
       let lastTile: Types.Tile | null = null;
 
       rowTiles.forEach((tile) => {
@@ -152,7 +151,7 @@ function slideTiles(
         } else {
           move(tile, row, targetCol);
           lastTile = tile;
-          targetCol += direction === "left" ? 1 : -1;
+          targetCol += action === "left" ? 1 : -1;
         }
       });
     }
@@ -208,7 +207,7 @@ function resolveEndState(
   const { rows, columns } = gridSize;
 
   if (state.tiles.some((t) => t.value >= getGoalFromGridSize(gridSize))) {
-    return { ...state, state: "won" };
+    return { ...state, status: "won" };
   }
 
   const available = getAvailablePositions({ gridSize, state });
@@ -231,21 +230,21 @@ function resolveEndState(
       }
     }
     if (!movesLeft) {
-      return { ...state, state: "lost" };
+      return { ...state, status: "lost" };
     }
   }
 
   return state;
 }
 
-const applyMove: Types.ApplyMove = ({ state, direction, gridSize, rand }) => {
-  if (!supportedActions.includes(direction)) {
+const applyAction: Types.ApplyAction = ({ state, action, gridSize, rand }) => {
+  if (!supportedActions.includes(action)) {
     return state;
   }
 
   const { tiles, scoreIncrease, changed } = slideTiles(
     state.tiles,
-    direction,
+    action,
     gridSize
   );
 
@@ -265,7 +264,7 @@ const gameConfig: Types.GameConfig = {
   supportedActions,
   name: "2048",
   getInitState,
-  applyMove,
+  applyAction,
   defaultGridSize: {
     rows: 4,
     columns: 4,

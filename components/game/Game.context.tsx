@@ -44,7 +44,7 @@ type GameContext = {
     callback: TileSubscriber
   ) => { unsubscribe: () => void };
   handleAction: (
-    action: GameTypes.Direction,
+    action: GameTypes.Action,
     options?: {
       animationDuration?: number;
     }
@@ -56,7 +56,7 @@ type GameContext = {
   columns: number;
   rows: number;
   score: SharedValue<number>;
-  state: GameTypes.State;
+  status: GameTypes.Status;
 };
 
 const Context = React.createContext<GameContext | null>(null);
@@ -123,11 +123,11 @@ export function useScore() {
   });
 }
 
-export function useGameState(): GameTypes.State {
+export function useGameState(): GameTypes.Status {
   const fallback = "playing";
-  const { state } = React.useContext(Context) ?? {};
+  const { status } = React.useContext(Context) ?? {};
 
-  return state ?? fallback;
+  return status ?? fallback;
 }
 
 export function useSetGame() {
@@ -144,8 +144,8 @@ export function useSetGame() {
   };
 }
 
-function getCollapsingFromDirection(direction: GameTypes.Direction) {
-  switch (direction) {
+function getCollapsingFromDirection(action: GameTypes.Action) {
+  switch (action) {
     case "up":
       return "top";
     case "down":
@@ -179,8 +179,8 @@ export function GameProvider(props: { children: React.ReactNode }) {
   );
 
   const score = useSharedValue<number>(currentState.current.score);
-  const [state, setState] = React.useState<GameTypes.State>(
-    currentState.current.state
+  const [status, setStatus] = React.useState<GameTypes.Status>(
+    currentState.current.status
   );
 
   const getTile = React.useCallback<GameContext["getTile"]>(
@@ -214,7 +214,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
   );
 
   const setAllToCurrentState = React.useCallback(() => {
-    setState(currentState.current.state);
+    setStatus(currentState.current.status);
     score.value = currentState.current.score;
 
     Object.entries(callbacks.current).forEach(([tileIdString, callback]) => {
@@ -226,25 +226,25 @@ export function GameProvider(props: { children: React.ReactNode }) {
     animationProgress.value = 0;
   }, [animationProgress, getTile, score]);
 
-  const pendingActions = React.useRef<GameTypes.Direction[]>([]);
+  const pendingActions = React.useRef<GameTypes.Action[]>([]);
 
   const handleAction = React.useCallback<GameContext["handleAction"]>(
-    (direction, options) => {
+    (action, options) => {
       const animationDuration = options?.animationDuration ?? duration;
 
       vibrate?.();
 
       // Prevent action if animation is in progress
       if (animationProgress.value > 0 && animationProgress.value < 1) {
-        pendingActions.current.push(direction);
+        pendingActions.current.push(action);
 
         return;
       }
 
       animationProgress.value = 0;
 
-      const nextState = game.applyMove({
-        direction,
+      const nextState = game.applyAction({
+        action,
         gridSize: { columns, rows },
         state: currentState.current,
         rand,
@@ -334,7 +334,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
                 textColor: tile.textColor,
                 position: mergedToTile.position,
                 scalePop: false,
-                collapsing: getCollapsingFromDirection(direction) ?? "center",
+                collapsing: getCollapsingFromDirection(action) ?? "center",
               };
             });
 
@@ -433,7 +433,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
       rand,
     });
 
-    setState(currentState.current.state);
+    setStatus(currentState.current.status);
     score.value = currentState.current.score;
 
     setAllToCurrentState();
@@ -464,7 +464,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
       columns,
       rows,
       score,
-      state,
+      status,
       setGame,
     }),
     [
@@ -479,7 +479,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
       columns,
       rows,
       score,
-      state,
+      status,
     ]
   );
 
