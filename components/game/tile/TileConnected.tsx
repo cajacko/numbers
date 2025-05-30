@@ -201,8 +201,9 @@ export default React.memo(function TileConnected({
           }
         }
 
-        // opacity = interpolate(animationProgress.value, [0, 1], [1, 0]);
-        opacity = 1;
+        // Animating opacity works better when merging from more than 1 tile away
+        opacity = interpolate(animationProgress.value, [0, 1], [1, 0]);
+        // opacity = 1;
       } else if (nextState.value.scalePop) {
         // This tile is consuming some other tiles so pop it
         opacity = 1;

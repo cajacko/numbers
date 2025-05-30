@@ -50,6 +50,9 @@ type GameContext = {
     }
   ) => void;
   reset: () => void;
+  setRows: (rows: number) => void;
+  setColumns: (columns: number) => void;
+  setGame: (game: GameTypes.GameConfig) => void;
   columns: number;
   rows: number;
   score: SharedValue<number>;
@@ -96,6 +99,12 @@ export function useActionHandlers() {
   return { handleAction, reset };
 }
 
+export function useSetGridSize() {
+  const { setRows, setColumns } = React.useContext(Context) ?? {};
+
+  return { setRows, setColumns };
+}
+
 export function useGridSize() {
   const { columns, rows } = React.useContext(Context) ?? {
     columns: 4,
@@ -121,6 +130,20 @@ export function useGameState(): GameTypes.State {
   return state ?? fallback;
 }
 
+export function useSetGame() {
+  const { setGame, game } = React.useContext(Context) ?? {};
+
+  return {
+    setGame: React.useCallback(
+      (game: GameTypes.GameConfig) => {
+        setGame?.(game);
+      },
+      [setGame]
+    ),
+    game,
+  };
+}
+
 function getCollapsingFromDirection(direction: GameTypes.Direction) {
   switch (direction) {
     case "up":
@@ -138,14 +161,16 @@ function getCollapsingFromDirection(direction: GameTypes.Direction) {
 
 export function GameProvider(props: { children: React.ReactNode }) {
   const { vibrate } = useVibrate();
-  const [game] = React.useState<GameTypes.GameConfig>(defaultGame);
+  const [game, setGame] = React.useState<GameTypes.GameConfig>(defaultGame);
 
   const animationProgress = useSharedValue<number>(0);
 
   const rand = React.useMemo(() => withRand(generateSeed()), []);
 
-  const columns = game.defaultGridSize.columns;
-  const rows = game.defaultGridSize.rows;
+  const [columns, setColumns] = React.useState<number>(
+    game.defaultGridSize.columns
+  );
+  const [rows, setRows] = React.useState<number>(game.defaultGridSize.rows);
 
   const callbacks = React.useRef<Record<GameTypes.TileId, TileSubscriber>>({});
 
@@ -434,10 +459,13 @@ export function GameProvider(props: { children: React.ReactNode }) {
       animationProgress,
       handleAction,
       reset,
+      setRows,
+      setColumns,
       columns,
       rows,
       score,
       state,
+      setGame,
     }),
     [
       game,
@@ -446,6 +474,8 @@ export function GameProvider(props: { children: React.ReactNode }) {
       getTile,
       handleAction,
       reset,
+      setRows,
+      setColumns,
       columns,
       rows,
       score,
