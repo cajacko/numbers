@@ -52,6 +52,7 @@ type GameContext = {
   reset: () => void;
   setRows: (rows: number) => void;
   setColumns: (columns: number) => void;
+  setGame: (game: GameTypes.GameConfig) => void;
   columns: number;
   rows: number;
   score: SharedValue<number>;
@@ -129,6 +130,20 @@ export function useGameState(): GameTypes.State {
   return state ?? fallback;
 }
 
+export function useSetGame() {
+  const { setGame, game } = React.useContext(Context) ?? {};
+
+  return {
+    setGame: React.useCallback(
+      (game: GameTypes.GameConfig) => {
+        setGame?.(game);
+      },
+      [setGame]
+    ),
+    game,
+  };
+}
+
 function getCollapsingFromDirection(direction: GameTypes.Direction) {
   switch (direction) {
     case "up":
@@ -146,7 +161,7 @@ function getCollapsingFromDirection(direction: GameTypes.Direction) {
 
 export function GameProvider(props: { children: React.ReactNode }) {
   const { vibrate } = useVibrate();
-  const [game] = React.useState<GameTypes.GameConfig>(defaultGame);
+  const [game, setGame] = React.useState<GameTypes.GameConfig>(defaultGame);
 
   const animationProgress = useSharedValue<number>(0);
 
@@ -450,6 +465,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
       rows,
       score,
       state,
+      setGame,
     }),
     [
       game,
