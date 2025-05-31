@@ -327,6 +327,71 @@ function getGoalFromGridSize(gridSize: Types.GridSize): number {
   }
 }
 
+function resolveExitLocation({
+  state,
+  action,
+  gridSize,
+}: {
+  state: Types.GameState;
+  action: Types.Action;
+  gridSize: Types.GridSize;
+}): Types.GameState | null {
+  const exit = state.settings.exitLocation;
+  if (!exit) return null;
+
+  if (exit.direction !== action) return null;
+
+  const { index, minValue } = exit;
+  let checkRow = 0,
+    checkCol = 0,
+    outRow = 0,
+    outCol = 0;
+
+  switch (exit.direction) {
+    case "up":
+      checkRow = 0;
+      checkCol = index;
+      outRow = -1;
+      outCol = index;
+      break;
+    case "down":
+      checkRow = gridSize.rows - 1;
+      checkCol = index;
+      outRow = gridSize.rows;
+      outCol = index;
+      break;
+    case "left":
+      checkRow = index;
+      checkCol = 0;
+      outRow = index;
+      outCol = -1;
+      break;
+    case "right":
+      checkRow = index;
+      checkCol = gridSize.columns - 1;
+      outRow = index;
+      outCol = gridSize.columns;
+      break;
+    default:
+      return null;
+  }
+
+  const tile = state.tiles.find(
+    (t) => t.position[0] === checkRow && t.position[1] === checkCol
+  );
+
+  if (!tile) return null;
+  if (tile.value === null || tile.value < minValue) return null;
+
+  const newTiles = state.tiles.map((t) =>
+    t.id === tile.id
+      ? { ...t, position: [outRow, outCol] as Types.Position }
+      : t
+  );
+
+  return { ...state, tiles: newTiles, status: "won" };
+}
+
 function resolveEndState(
   state: Types.GameState,
   gridSize: Types.GridSize
@@ -373,6 +438,11 @@ const applyAction: Types.ApplyAction = ({ state, action, gridSize, rand }) => {
     return state;
   }
 
+  const exitState = resolveExitLocation({ state, action, gridSize });
+  if (exitState) {
+    return exitState;
+  }
+
   const { tiles, scoreIncrease, changed } = slideTiles(
     state.tiles,
     action,
@@ -405,6 +475,7 @@ const gameConfig: Types.GameConfig = {
     permZeroTileCount: 2,
     randomFixedTiles: 1,
     newTileValue: 1,
+    exitLocation: null,
   },
 };
 

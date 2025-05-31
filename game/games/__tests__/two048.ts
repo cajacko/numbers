@@ -22,6 +22,7 @@ const standard2048Settings: Types.Settings = {
   zeroTiles: false,
   permZeroTileCount: 0,
   randomFixedTiles: null,
+  exitLocation: null,
 };
 
 const descriptions: {
@@ -483,6 +484,45 @@ const descriptions: {
         ],
         expectedStatus: "won",
         settings: standard2048Settings,
+      },
+    ],
+  },
+  {
+    title: "Exit location",
+    cases: [
+      {
+        title: "Tile meeting requirement exits and wins",
+        gridSize: { rows: 4, columns: 4 },
+        randomAvailablePosition: [3, 3],
+        prevTiles: [
+          { tileId: 0, value: 16, row: 0, column: 1 },
+        ],
+        applyAction: "up",
+        expectedPositions: [
+          { tileId: 0, value: 16, row: -1, column: 1 },
+        ],
+        expectedStatus: "won",
+        settings: {
+          ...standard2048Settings,
+          exitLocation: { direction: "up", index: 1, minValue: 16 },
+        },
+      },
+      {
+        title: "Tile below requirement does not exit",
+        gridSize: { rows: 4, columns: 4 },
+        randomAvailablePosition: [3, 3],
+        prevTiles: [
+          { tileId: 0, value: 8, row: 0, column: 2 },
+        ],
+        applyAction: "up",
+        expectedPositions: [
+          { tileId: 0, value: 8, row: 0, column: 2 },
+        ],
+        expectedStatus: "user-turn",
+        settings: {
+          ...standard2048Settings,
+          exitLocation: { direction: "up", index: 2, minValue: 16 },
+        },
       },
     ],
   },

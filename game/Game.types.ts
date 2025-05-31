@@ -13,11 +13,22 @@ export type Tile = {
   textColor: string;
 };
 
+export type ExitLocation = {
+  /** Direction that allows exiting the grid */
+  direction: "up" | "down" | "left" | "right";
+  /** Row or column index adjacent to the exit depending on direction */
+  index: number;
+  /** Minimum tile value required to use the exit */
+  minValue: number;
+};
+
 export type Settings = {
   zeroTiles: boolean;
   permZeroTileCount: number;
   randomFixedTiles: number | null;
   newTileValue: number;
+  /** Optional exit location configuration */
+  exitLocation?: ExitLocation | null;
 };
 
 export type Status = "user-turn" | "ai-turn" | "won" | "lost";
