@@ -50,8 +50,13 @@ export default React.memo(function TileConnected({
   );
 
   const value = useDerivedValue<number | null>(() => {
-    const currentValue = currentState.value?.value ?? null;
-    const nextValue = nextState.value?.value ?? null;
+    const currentValue =
+      typeof currentState.value?.value === "number"
+        ? currentState.value.value
+        : null;
+
+    const nextValue =
+      typeof nextState.value?.value === "number" ? nextState.value.value : null;
 
     if (currentValue !== null && nextValue !== null) {
       if (flags.animateNumbers) {

@@ -64,6 +64,7 @@ const Digit = React.memo(function Digit({
     if (isNaN(digit) || digit === undefined) return null;
 
     if (digit !== 0) return digit;
+    if (reversedDigitIndex === 0) return 0;
 
     let isLeadingZero = true;
 
