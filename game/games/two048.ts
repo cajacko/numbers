@@ -12,26 +12,30 @@ export function getColorsFromValue(value: Types.Value): {
   switch (value) {
     case null:
       return { backgroundColor: "black", textColor: "black" };
-    case 2:
+    case 0:
       return { backgroundColor: "#eee4da", textColor: "#776e65" };
-    case 4:
+    case 1:
       return { backgroundColor: "#ede0c8", textColor: "#776e65" };
-    case 8:
+    case 2:
       return { backgroundColor: "#f2b179", textColor: "#f9f6f2" };
-    case 16:
+    case 4:
       return { backgroundColor: "#f59563", textColor: "#f9f6f2" };
-    case 32:
+    case 8:
       return { backgroundColor: "#f67c5f", textColor: "#f9f6f2" };
-    case 64:
+    case 16:
       return { backgroundColor: "#f65e3b", textColor: "#f9f6f2" };
-    case 128:
+    case 32:
       return { backgroundColor: "#edcf72", textColor: "#f9f6f2" };
-    case 256:
+    case 64:
       return { backgroundColor: "#edcc61", textColor: "#f9f6f2" };
-    case 512:
+    case 128:
       return { backgroundColor: "#edc850", textColor: "#f9f6f2" };
-    case 1024:
+    case 256:
       return { backgroundColor: "#edc53d", textColor: "#f9f6f2" };
+    case 512:
+      return { backgroundColor: "#edc22e", textColor: "#f9f6f2" };
+    case 1024:
+      return { backgroundColor: "#edc22e", textColor: "#f9f6f2" };
     case 2048:
       return { backgroundColor: "#edc22e", textColor: "#f9f6f2" };
     default:
@@ -39,16 +43,18 @@ export function getColorsFromValue(value: Types.Value): {
   }
 }
 
-function spawnStartingTiles({
+function spawnTiles({
   state,
   gridSize,
   rand,
-  count = 2,
+  count,
+  value,
 }: {
   state: Types.GameState;
   gridSize: Types.GridSize;
   rand: Types.Rand;
-  count?: number;
+  count: number;
+  value: Types.Value;
 }): Types.GameState {
   let nextState: Types.GameState | null = state;
 
@@ -58,8 +64,8 @@ function spawnStartingTiles({
       rand,
       state: nextState,
       tile: {
-        value: 2,
-        ...getColorsFromValue(2),
+        value: value,
+        ...getColorsFromValue(value),
       },
     });
 
@@ -71,14 +77,33 @@ function spawnStartingTiles({
   return nextState;
 }
 
-const getInitState: Types.GetInitState = ({ rand, gridSize }) => {
-  const baseState: Types.GameState = {
+const getInitState: Types.GetInitState = ({ rand, gridSize, settings }) => {
+  let nextState: Types.GameState = {
     tiles: [],
     score: 0,
     status: "user-turn",
+    settings,
   };
 
-  return spawnStartingTiles({ state: baseState, gridSize, rand });
+  if (settings.zeroTiles) {
+    nextState = spawnTiles({
+      state: nextState,
+      gridSize,
+      rand,
+      count: settings.permZeroTileCount,
+      value: 0,
+    });
+  }
+
+  nextState = spawnTiles({
+    state: nextState,
+    gridSize,
+    rand,
+    count: 2,
+    value: settings.newTileValue,
+  });
+
+  return nextState;
 };
 
 function mergeTiles(
@@ -236,16 +261,30 @@ function spawnRandomTile(
 ): Types.GameState {
   if (!changed) return state;
 
-  const value = rand() < 0.9 ? 2 : 4;
+  let nextState = state;
 
-  const spawned = spawnTile({
-    state,
-    gridSize,
-    rand,
-    tile: { value, ...getColorsFromValue(value) },
-  });
+  const zeroCount = state.tiles.filter((t) => t.value === 0).length;
 
-  return spawned ?? state;
+  let value: number | null;
+
+  if (
+    nextState.settings.zeroTiles &&
+    zeroCount < nextState.settings.permZeroTileCount
+  ) {
+    value = 0;
+  } else {
+    value = nextState.settings.newTileValue;
+  }
+
+  nextState =
+    spawnTile({
+      state,
+      gridSize,
+      rand,
+      tile: { value, ...getColorsFromValue(value) },
+    }) ?? nextState;
+
+  return nextState;
 }
 
 /**
@@ -339,6 +378,12 @@ const gameConfig: Types.GameConfig = {
   defaultGridSize: {
     rows: 4,
     columns: 4,
+  },
+  defaultSettings: {
+    zeroTiles: false,
+    permZeroTileCount: 2,
+    randomFixedTiles: null,
+    newTileValue: 2,
   },
 };
 

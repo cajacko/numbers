@@ -13,13 +13,14 @@ export type Tile = {
   textColor: string;
 };
 
-export type Status = "user-turn" | "ai-turn" | "won" | "lost";
-
-export type GameState = {
-  tiles: Tile[];
-  score: number;
-  status: Status;
+export type Settings = {
+  zeroTiles: boolean;
+  permZeroTileCount: number;
+  randomFixedTiles: null;
+  newTileValue: number;
 };
+
+export type Status = "user-turn" | "ai-turn" | "won" | "lost";
 
 export type Action = "up" | "down" | "left" | "right" | "tap" | "tick";
 
@@ -28,9 +29,17 @@ export type GridSize = {
   columns: number;
 };
 
+export type GameState = {
+  tiles: Tile[];
+  score: number;
+  status: Status;
+  settings: Settings;
+};
+
 export type GetInitState = (props: {
   gridSize: GridSize;
   rand: Rand;
+  settings: Settings;
 }) => GameState;
 
 export type ApplyAction = (props: {
@@ -46,6 +55,7 @@ export type GameConfig = {
   getInitState: GetInitState;
   applyAction: ApplyAction;
   defaultGridSize: GridSize;
+  defaultSettings: Settings;
 };
 
 type CreateDiffType<T extends string, P> = {

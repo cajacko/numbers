@@ -299,23 +299,6 @@ const descriptions: {
     ],
   },
   {
-    title: "Random tile values",
-    cases: [
-      {
-        title: "Spawns a 4 tile when random >= 0.9",
-        gridSize: { rows: 4, columns: 4 },
-        randomAvailablePosition: [3, 3],
-        prevTiles: [{ tileId: 0, value: 2, row: 1, column: 0 }],
-        applyAction: "up",
-        seed: "h",
-        expectedPositions: [
-          { tileId: 0, value: 2, row: 0, column: 0 },
-          { tileId: 1, value: 4, row: 3, column: 3 },
-        ],
-      },
-    ],
-  },
-  {
     title: "End states",
     cases: [
       {
@@ -462,6 +445,7 @@ function stateFromTilePositions(positions: TilePosition[]): Types.GameState {
     tiles: tiles.sort((a, b) => a.id - b.id),
     score: 0,
     status: "user-turn",
+    settings: two048.defaultSettings,
   };
 }
 

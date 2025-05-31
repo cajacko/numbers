@@ -17,11 +17,12 @@ const supportedActions: Types.Action[] = [
 const heroColor = "white";
 const enemyColor = "red";
 
-const getInitState: Types.GetInitState = ({ rand, gridSize }) => {
+const getInitState: Types.GetInitState = ({ rand, gridSize, settings }) => {
   let state: Types.GameState | null = {
     tiles: [],
     score: 0,
     status: "user-turn",
+    settings,
   };
 
   state = {
@@ -519,6 +520,12 @@ const gameConfig: Types.GameConfig = {
   defaultGridSize: {
     rows: 5,
     columns: 5,
+  },
+  defaultSettings: {
+    zeroTiles: false,
+    permZeroTileCount: 2,
+    randomFixedTiles: null,
+    newTileValue: 2,
   },
 };
 

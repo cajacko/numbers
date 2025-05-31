@@ -175,7 +175,11 @@ export function GameProvider(props: { children: React.ReactNode }) {
   const callbacks = React.useRef<Record<GameTypes.TileId, TileSubscriber>>({});
 
   const currentStateRef = React.useRef(
-    game.getInitState({ gridSize: { columns, rows }, rand })
+    game.getInitState({
+      gridSize: { columns, rows },
+      rand,
+      settings: game.defaultSettings,
+    })
   );
 
   const nextStateRef = React.useRef<GameTypes.GameState | null>(null);
@@ -456,6 +460,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
     currentStateRef.current = game.getInitState({
       gridSize: { columns, rows },
       rand,
+      settings: game.defaultSettings,
     });
 
     setStatus(currentStateRef.current.status);
