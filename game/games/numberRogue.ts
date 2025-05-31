@@ -23,6 +23,7 @@ const getInitState: Types.GetInitState = ({ rand, gridSize, settings }) => {
     score: 0,
     status: "user-turn",
     settings,
+    exitLocations: [],
   };
 
   state = {

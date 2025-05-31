@@ -509,6 +509,7 @@ function stateFromTilePositions(
     score: 0,
     status: "user-turn",
     settings,
+    exitLocations: [],
   };
 }
 
