@@ -57,6 +57,7 @@ type GameContext = {
   rows: number;
   score: SharedValue<number>;
   status: GameTypes.Status;
+  exitLocations: GameTypes.ExitLocation[];
 };
 
 const Context = React.createContext<GameContext | null>(null);
@@ -142,6 +143,12 @@ export function useSetGame() {
     ),
     game,
   };
+}
+
+export function useExitLocations() {
+  const { exitLocations } = React.useContext(Context) ?? {};
+
+  return React.useMemo(() => exitLocations ?? [], [exitLocations]);
 }
 
 function getCollapsingFromDirection(action: GameTypes.Action) {
@@ -456,12 +463,18 @@ export function GameProvider(props: { children: React.ReactNode }) {
     ]
   );
 
+  const [exitLocations, setExitLocations] = React.useState<
+    GameTypes.ExitLocation[]
+  >(currentStateRef.current.exitLocations);
+
   const reset = React.useCallback<GameContext["reset"]>(() => {
     currentStateRef.current = game.getInitState({
       gridSize: { columns, rows },
       rand,
       settings: game.defaultSettings,
     });
+
+    setExitLocations(currentStateRef.current.exitLocations);
 
     setStatus(currentStateRef.current.status);
     score.value = currentStateRef.current.score;
@@ -496,6 +509,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
       score,
       status,
       setGame,
+      exitLocations,
     }),
     [
       game,
@@ -510,6 +524,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
       rows,
       score,
       status,
+      exitLocations,
     ]
   );
 

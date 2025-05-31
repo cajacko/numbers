@@ -83,6 +83,16 @@ const getInitState: Types.GetInitState = ({ rand, gridSize, settings }) => {
     score: 0,
     status: "user-turn",
     settings,
+    exitLocations: [
+      {
+        requirements: {
+          type: "greater-than-equal-to",
+          value: 16,
+        },
+        side: "top",
+        index: 2,
+      },
+    ],
   };
 
   if (settings.randomFixedTiles) {

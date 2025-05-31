@@ -40,11 +40,20 @@ export type GridSize = {
   columns: number;
 };
 
+export type ExitLocation = {
+  side: "top" | "bottom" | "left" | "right";
+  index: number;
+  requirements:
+    | { type: "greater-than-equal-to"; value: number }
+    | { type: "equal-to"; value: number };
+};
+
 export type GameState = {
   tiles: Tile[];
   score: number;
   status: Status;
   settings: Settings;
+  exitLocations: ExitLocation[];
 };
 
 export type GetInitState = (props: {
