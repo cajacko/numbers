@@ -202,14 +202,21 @@ function resolveHeroEnemyCollision({
   const tiles: Types.Tile[] = [];
   const heroTile = getHeroTile(state);
 
-  const heroValue = heroTile.value - enemyTile.value;
-  const enemyValue = enemyTile.value - heroTile.value;
+  const heroValue =
+    heroTile.value === null || enemyTile.value === null
+      ? heroTile.value
+      : heroTile.value - enemyTile.value;
 
-  const scoreChange = Math.max(heroTile.value - enemyTile.value, 0) * 10;
+  const enemyValue =
+    heroTile.value === null || enemyTile.value === null
+      ? enemyTile.value
+      : enemyTile.value - heroTile.value;
+
+  const scoreChange = heroValue !== null ? Math.max(heroValue, 0) * 10 : 0;
 
   state.tiles.forEach((tile) => {
     if (tileType(tile) === "hero") {
-      if (heroValue > 0) {
+      if (heroValue !== null && heroValue > 0) {
         tiles.push({
           ...tile,
           position: position,
@@ -219,7 +226,7 @@ function resolveHeroEnemyCollision({
       }
     } else {
       if (enemyTile.id === tile.id) {
-        if (enemyValue > 0) {
+        if (enemyValue !== null && enemyValue > 0) {
           tiles.push({
             ...tile,
             position: enemyTile.position,
@@ -280,9 +287,9 @@ function damageTileId({
 
   state.tiles.forEach((tile) => {
     if (tile.id === tileId) {
-      const newValue = tile.value - value;
+      const newValue = tile.value === null ? null : tile.value - value;
 
-      if (newValue > 0) {
+      if (newValue !== null && newValue > 0) {
         tiles.push({ ...tile, value: newValue });
       }
     } else {

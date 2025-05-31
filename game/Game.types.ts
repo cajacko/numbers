@@ -2,7 +2,7 @@ export type TileId = number;
 
 export type Position = [row: number, column: number];
 
-export type Value = number;
+export type Value = number | null;
 
 export type Tile = {
   id: TileId;

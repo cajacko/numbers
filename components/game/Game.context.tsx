@@ -3,7 +3,6 @@ import { defaultGame } from "@/game/games";
 import getGameStateDiffs from "@/game/utils/getGameStateDiffs";
 import useVibrate from "@/hooks/useVibrate";
 import withRand, { generateSeed } from "@/utils/withRand";
-import { types } from "@babel/core";
 import React from "react";
 import {
   runOnJS,

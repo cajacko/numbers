@@ -5,11 +5,13 @@ import getAvailablePositions from "@/game/utils/getAvailablePositions";
 
 const supportedActions: Types.Action[] = ["up", "down", "left", "right"];
 
-export function getColorsFromValue(value: number): {
+export function getColorsFromValue(value: Types.Value): {
   backgroundColor: string;
   textColor: string;
 } {
   switch (value) {
+    case null:
+      return { backgroundColor: "black", textColor: "black" };
     case 2:
       return { backgroundColor: "#eee4da", textColor: "#776e65" };
     case 4:
@@ -83,9 +85,19 @@ function mergeTiles(
   target: Types.Tile,
   source: Types.Tile,
   removed: Set<Types.TileId>
-): { score: number; changed: boolean } {
+): { score: number | null; changed: boolean } {
   removed.add(source.id);
-  target.value *= 2;
+
+  if (target.value === null && source.value === null) {
+    target.value = null;
+  } else if (target.value === null) {
+    target.value = source.value;
+  } else if (source.value === null) {
+    target.value = target.value;
+  } else {
+    target.value += source.value;
+  }
+
   const colors = getColorsFromValue(target.value);
   target.backgroundColor = colors.backgroundColor;
   target.textColor = colors.textColor;
@@ -98,11 +110,7 @@ function mergeTiles(
   return { score: target.value, changed };
 }
 
-function moveTile(
-  tile: Types.Tile,
-  row: number,
-  column: number
-): boolean {
+function moveTile(tile: Types.Tile, row: number, column: number): boolean {
   if (tile.position[0] !== row || tile.position[1] !== column) {
     tile.position = [row, column];
     return true;
@@ -124,7 +132,10 @@ function slideColumn(
   columnTiles.forEach((tile) => {
     if (lastTile && lastTile.value === tile.value && !lastTile.mergedFrom) {
       const result = mergeTiles(lastTile, tile, removed);
-      score += result.score;
+
+      if (result.score) {
+        score += result.score;
+      }
       if (result.changed) changed = true;
     } else {
       if (moveTile(tile, targetRow, col)) changed = true;
@@ -150,7 +161,9 @@ function slideRow(
   rowTiles.forEach((tile) => {
     if (lastTile && lastTile.value === tile.value && !lastTile.mergedFrom) {
       const result = mergeTiles(lastTile, tile, removed);
-      score += result.score;
+      if (result.score) {
+        score += result.score;
+      }
       if (result.changed) changed = true;
     } else {
       if (moveTile(tile, row, targetCol)) changed = true;
@@ -187,13 +200,7 @@ function slideTiles(
         if (tile) columnTiles.push(tile);
       }
 
-      const result = slideColumn(
-        columnTiles,
-        col,
-        start,
-        step,
-        removed
-      );
+      const result = slideColumn(columnTiles, col, start, step, removed);
 
       scoreIncrease += result.score;
       if (result.changed) changed = true;
@@ -210,13 +217,7 @@ function slideTiles(
         if (tile) rowTiles.push(tile);
       }
 
-      const result = slideRow(
-        rowTiles,
-        row,
-        start,
-        step,
-        removed
-      );
+      const result = slideRow(rowTiles, row, start, step, removed);
 
       scoreIncrease += result.score;
       if (result.changed) changed = true;
@@ -272,7 +273,11 @@ function resolveEndState(
 ): Types.GameState {
   const { rows, columns } = gridSize;
 
-  if (state.tiles.some((t) => t.value >= getGoalFromGridSize(gridSize))) {
+  if (
+    state.tiles.some(
+      (t) => t.value !== null && t.value >= getGoalFromGridSize(gridSize)
+    )
+  ) {
     return { ...state, status: "won" };
   }
 

@@ -12,7 +12,7 @@ import getRandomAvailablePosition from "../../utils/getRandomAvailablePosition";
 
 type TilePosition = {
   tileId: number;
-  value: number;
+  value: Types.Value;
   row: number;
   column: number;
 };
