@@ -37,43 +37,130 @@ export function getColorsFromValue(value: number): {
   }
 }
 
+function spawnStartingTiles({
+  state,
+  gridSize,
+  rand,
+  count = 2,
+}: {
+  state: Types.GameState;
+  gridSize: Types.GridSize;
+  rand: Types.Rand;
+  count?: number;
+}): Types.GameState {
+  let nextState: Types.GameState | null = state;
+
+  for (let i = 0; i < count; i++) {
+    nextState = spawnTile({
+      gridSize,
+      rand,
+      state: nextState,
+      tile: {
+        value: 2,
+        ...getColorsFromValue(2),
+      },
+    });
+
+    if (!nextState) {
+      throw new Error("No available position to place a new tile.");
+    }
+  }
+
+  return nextState;
+}
+
 const getInitState: Types.GetInitState = ({ rand, gridSize }) => {
-  let state: Types.GameState | null = {
+  const baseState: Types.GameState = {
     tiles: [],
     score: 0,
     status: "user-turn",
   };
 
-  state = spawnTile({
-    gridSize,
-    rand,
-    state,
-    tile: {
-      value: 2,
-      ...getColorsFromValue(2),
-    },
-  });
-
-  if (!state) {
-    throw new Error("No available position to place a new tile.");
-  }
-
-  state = spawnTile({
-    gridSize,
-    rand,
-    state,
-    tile: {
-      value: 2,
-      ...getColorsFromValue(2),
-    },
-  });
-
-  if (!state) {
-    throw new Error("No available position to place a new tile.");
-  }
-
-  return state;
+  return spawnStartingTiles({ state: baseState, gridSize, rand });
 };
+
+function mergeTiles(
+  target: Types.Tile,
+  source: Types.Tile,
+  removed: Set<Types.TileId>
+): { score: number; changed: boolean } {
+  removed.add(source.id);
+  target.value *= 2;
+  const colors = getColorsFromValue(target.value);
+  target.backgroundColor = colors.backgroundColor;
+  target.textColor = colors.textColor;
+  target.mergedFrom = [target.id, source.id];
+
+  const changed =
+    source.position[0] !== target.position[0] ||
+    source.position[1] !== target.position[1];
+
+  return { score: target.value, changed };
+}
+
+function moveTile(
+  tile: Types.Tile,
+  row: number,
+  column: number
+): boolean {
+  if (tile.position[0] !== row || tile.position[1] !== column) {
+    tile.position = [row, column];
+    return true;
+  }
+  return false;
+}
+
+function slideColumn(
+  columnTiles: Types.Tile[],
+  col: number,
+  targetRow: number,
+  step: number,
+  removed: Set<Types.TileId>
+): { score: number; changed: boolean } {
+  let lastTile: Types.Tile | null = null;
+  let changed = false;
+  let score = 0;
+
+  columnTiles.forEach((tile) => {
+    if (lastTile && lastTile.value === tile.value && !lastTile.mergedFrom) {
+      const result = mergeTiles(lastTile, tile, removed);
+      score += result.score;
+      if (result.changed) changed = true;
+    } else {
+      if (moveTile(tile, targetRow, col)) changed = true;
+      lastTile = tile;
+      targetRow += step;
+    }
+  });
+
+  return { score, changed };
+}
+
+function slideRow(
+  rowTiles: Types.Tile[],
+  row: number,
+  targetCol: number,
+  step: number,
+  removed: Set<Types.TileId>
+): { score: number; changed: boolean } {
+  let lastTile: Types.Tile | null = null;
+  let changed = false;
+  let score = 0;
+
+  rowTiles.forEach((tile) => {
+    if (lastTile && lastTile.value === tile.value && !lastTile.mergedFrom) {
+      const result = mergeTiles(lastTile, tile, removed);
+      score += result.score;
+      if (result.changed) changed = true;
+    } else {
+      if (moveTile(tile, row, targetCol)) changed = true;
+      lastTile = tile;
+      targetCol += step;
+    }
+  });
+
+  return { score, changed };
+}
 
 function slideTiles(
   tiles: Types.Tile[],
@@ -86,74 +173,53 @@ function slideTiles(
   let scoreIncrease = 0;
   let changed = false;
 
-  const merge = (target: Types.Tile, source: Types.Tile) => {
-    removed.add(source.id);
-    target.value *= 2;
-    const colors = getColorsFromValue(target.value);
-    target.backgroundColor = colors.backgroundColor;
-    target.textColor = colors.textColor;
-    target.mergedFrom = [target.id, source.id];
-    scoreIncrease += target.value;
-    if (
-      source.position[0] !== target.position[0] ||
-      source.position[1] !== target.position[1]
-    ) {
-      changed = true;
-    }
-  };
-
-  const move = (tile: Types.Tile, row: number, column: number) => {
-    if (tile.position[0] !== row || tile.position[1] !== column) {
-      changed = true;
-      tile.position = [row, column];
-    }
-  };
-
   const { rows, columns } = gridSize;
 
   if (action === "up" || action === "down") {
+    const start = action === "up" ? 0 : rows - 1;
+    const end = action === "up" ? rows : -1;
+    const step = action === "up" ? 1 : -1;
+
     for (let col = 0; col < columns; col++) {
       const columnTiles: Types.Tile[] = [];
-      const rIter = action === "up" ? [0, rows, 1] : [rows - 1, -1, -1];
-      for (let r = rIter[0]; r !== rIter[1]; r += rIter[2]) {
+      for (let r = start; r !== end; r += step) {
         const tile = positionMap[r]?.[col];
         if (tile) columnTiles.push(tile);
       }
 
-      let targetRow = action === "up" ? 0 : rows - 1;
-      let lastTile: Types.Tile | null = null;
+      const result = slideColumn(
+        columnTiles,
+        col,
+        start,
+        step,
+        removed
+      );
 
-      columnTiles.forEach((tile) => {
-        if (lastTile && lastTile.value === tile.value && !lastTile.mergedFrom) {
-          merge(lastTile, tile);
-        } else {
-          move(tile, targetRow, col);
-          lastTile = tile;
-          targetRow += action === "up" ? 1 : -1;
-        }
-      });
+      scoreIncrease += result.score;
+      if (result.changed) changed = true;
     }
   } else {
+    const start = action === "left" ? 0 : columns - 1;
+    const end = action === "left" ? columns : -1;
+    const step = action === "left" ? 1 : -1;
+
     for (let row = 0; row < rows; row++) {
       const rowTiles: Types.Tile[] = [];
-      const cIter = action === "left" ? [0, columns, 1] : [columns - 1, -1, -1];
-      for (let c = cIter[0]; c !== cIter[1]; c += cIter[2]) {
+      for (let c = start; c !== end; c += step) {
         const tile = positionMap[row]?.[c];
         if (tile) rowTiles.push(tile);
       }
 
-      let targetCol = action === "left" ? 0 : columns - 1;
-      let lastTile: Types.Tile | null = null;
+      const result = slideRow(
+        rowTiles,
+        row,
+        start,
+        step,
+        removed
+      );
 
-      rowTiles.forEach((tile) => {
-        if (lastTile && lastTile.value === tile.value && !lastTile.mergedFrom) {
-          merge(lastTile, tile);
-        } else {
-          move(tile, row, targetCol);
-          lastTile = tile;
-          targetCol += action === "left" ? 1 : -1;
-        }
-      });
+      scoreIncrease += result.score;
+      if (result.changed) changed = true;
     }
   }
 
