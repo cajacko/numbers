@@ -403,7 +403,7 @@ const gameConfig: Types.GameConfig = {
   defaultSettings: {
     zeroTiles: true,
     permZeroTileCount: 2,
-    randomFixedTiles: 2,
+    randomFixedTiles: 1,
     newTileValue: 1,
   },
 };
