@@ -90,7 +90,7 @@ const getInitState: Types.GetInitState = ({ rand, gridSize, settings }) => {
           value: 16,
         },
         side: "top",
-        index: 1,
+        index: 2,
       },
     ],
   };

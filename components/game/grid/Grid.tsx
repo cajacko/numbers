@@ -1,3 +1,6 @@
+import ExitLocation, {
+  ExitLocationProps,
+} from "@/components/game/ExitLocation";
 import TileConnected from "@/components/game/tile/TileConnected";
 import * as GameTypes from "@/game/Game.types";
 import React from "react";
@@ -16,6 +19,7 @@ export interface GridProps {
   tileIds: GameTypes.TileId[];
   availableHeight: number;
   availableWidth: number;
+  exitLocations?: GameTypes.ExitLocation[];
 }
 
 const maxTileSize = 250;
@@ -27,6 +31,7 @@ export default React.memo(function Grid({
   tileIds,
   availableHeight,
   availableWidth,
+  exitLocations,
 }: GridProps): React.ReactNode {
   const tileSize = React.useMemo((): number => {
     const size = Math.min(
@@ -44,10 +49,10 @@ export default React.memo(function Grid({
     sizeSharedValue.value = tileSize;
   }, [tileSize, sizeSharedValue]);
 
-  const containerStyle = React.useMemo(
+  const innerStyle = React.useMemo(
     () =>
       StyleSheet.flatten([
-        styles.container,
+        styles.inner,
         {
           width: tileSize * columns,
           height: tileSize * rows,
@@ -109,17 +114,29 @@ export default React.memo(function Grid({
 
   return (
     <GestureDetector gesture={gesture}>
-      <View style={containerStyle}>
-        {rowIds.map((rowId) => (
-          <View key={rowId} style={rowStyle}>
-            {columnIds.map((columnId) => (
-              <View key={columnId} style={cellStyle}>
-                <View style={styles.tile} />
-              </View>
-            ))}
-          </View>
+      <View style={styles.container}>
+        <View style={innerStyle}>
+          {rowIds.map((rowId) => (
+            <View key={rowId} style={rowStyle}>
+              {columnIds.map((columnId) => (
+                <View key={columnId} style={cellStyle}>
+                  <View style={styles.tile} />
+                </View>
+              ))}
+            </View>
+          ))}
+          {tiles}
+        </View>
+        {exitLocations?.map(({ index, requirements, side }, i) => (
+          <ExitLocation
+            key={i}
+            index={index}
+            side={side}
+            type={requirements.type}
+            value={requirements.value}
+            tileSize={sizeSharedValue}
+          />
         ))}
-        {tiles}
       </View>
     </GestureDetector>
   );
@@ -127,9 +144,14 @@ export default React.memo(function Grid({
 
 const styles = StyleSheet.create({
   container: {
+    position: "relative",
+  },
+  inner: {
     backgroundColor: "#9c8a7a",
     borderRadius: 10,
     overflow: "hidden",
+    flex: 1,
+    zIndex: 1,
   },
   row: {
     flexDirection: "row",
