@@ -121,17 +121,14 @@ function mergeTiles(
   source: Types.Tile,
   removed: Set<Types.TileId>
 ): { score: number | null; changed: boolean } {
+  // Fixed tiles (value === null) should never merge. Guard against it here.
+  if (target.value === null || source.value === null) {
+    return { score: null, changed: false };
+  }
+
   removed.add(source.id);
 
-  if (target.value === null && source.value === null) {
-    target.value = null;
-  } else if (target.value === null) {
-    target.value = source.value;
-  } else if (source.value === null) {
-    target.value = target.value;
-  } else {
-    target.value += source.value;
-  }
+  target.value += source.value;
 
   const colors = getColorsFromValue(target.value);
   target.backgroundColor = colors.backgroundColor;
@@ -165,6 +162,13 @@ function slideColumn(
   let score = 0;
 
   columnTiles.forEach((tile) => {
+    if (tile.value === null) {
+      // Fixed tile acts as a wall
+      lastTile = null;
+      targetRow = tile.position[0] + step;
+      return;
+    }
+
     if (lastTile && lastTile.value === tile.value && !lastTile.mergedFrom) {
       const result = mergeTiles(lastTile, tile, removed);
 
@@ -194,6 +198,13 @@ function slideRow(
   let score = 0;
 
   rowTiles.forEach((tile) => {
+    if (tile.value === null) {
+      // Fixed tile acts as a wall
+      lastTile = null;
+      targetCol = tile.position[1] + step;
+      return;
+    }
+
     if (lastTile && lastTile.value === tile.value && !lastTile.mergedFrom) {
       const result = mergeTiles(lastTile, tile, removed);
       if (result.score) {
