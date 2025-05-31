@@ -316,6 +316,45 @@ const descriptions: {
     ],
   },
   {
+    title: "Fixed tiles",
+    cases: [
+      {
+        title: "Tile stops before fixed tile when moving up",
+        gridSize: { rows: 4, columns: 4 },
+        randomAvailablePosition: [3, 3],
+        prevTiles: [
+          { tileId: 0, value: null, row: 1, column: 0 },
+          { tileId: 1, value: 2, row: 3, column: 0 },
+        ],
+        applyAction: "up",
+        expectedPositions: [
+          { tileId: 0, value: null, row: 1, column: 0 },
+          { tileId: 1, value: 2, row: 2, column: 0 },
+          { tileId: 2, value: 2, row: 3, column: 3 },
+        ],
+        settings: standard2048Settings,
+      },
+      {
+        title: "Tiles separated by fixed tile do not merge",
+        gridSize: { rows: 4, columns: 4 },
+        randomAvailablePosition: [1, 2],
+        prevTiles: [
+          { tileId: 0, value: 2, row: 0, column: 0 },
+          { tileId: 1, value: null, row: 0, column: 1 },
+          { tileId: 2, value: 2, row: 0, column: 3 },
+        ],
+        applyAction: "left",
+        expectedPositions: [
+          { tileId: 0, value: 2, row: 0, column: 0 },
+          { tileId: 1, value: null, row: 0, column: 1 },
+          { tileId: 2, value: 2, row: 0, column: 2 },
+          { tileId: 3, value: 2, row: 1, column: 2 },
+        ],
+        settings: standard2048Settings,
+      },
+    ],
+  },
+  {
     title: "End states",
     cases: [
       {
