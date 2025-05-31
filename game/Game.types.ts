@@ -16,7 +16,7 @@ export type Tile = {
 export type Settings = {
   zeroTiles: boolean;
   permZeroTileCount: number;
-  randomFixedTiles: null;
+  randomFixedTiles: number | null;
   newTileValue: number;
 };
 

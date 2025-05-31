@@ -85,6 +85,16 @@ const getInitState: Types.GetInitState = ({ rand, gridSize, settings }) => {
     settings,
   };
 
+  if (settings.randomFixedTiles) {
+    nextState = spawnTiles({
+      state: nextState,
+      gridSize,
+      rand,
+      count: settings.randomFixedTiles,
+      value: null,
+    });
+  }
+
   if (settings.zeroTiles) {
     nextState = spawnTiles({
       state: nextState,
@@ -380,10 +390,10 @@ const gameConfig: Types.GameConfig = {
     columns: 4,
   },
   defaultSettings: {
-    zeroTiles: false,
+    zeroTiles: true,
     permZeroTileCount: 2,
-    randomFixedTiles: null,
-    newTileValue: 2,
+    randomFixedTiles: 2,
+    newTileValue: 1,
   },
 };
 

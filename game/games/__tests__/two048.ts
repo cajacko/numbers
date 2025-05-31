@@ -17,6 +17,13 @@ type TilePosition = {
   column: number;
 };
 
+const standard2048Settings: Types.Settings = {
+  newTileValue: 2,
+  zeroTiles: false,
+  permZeroTileCount: 0,
+  randomFixedTiles: null,
+};
+
 const descriptions: {
   title: string;
   cases: {
@@ -28,6 +35,7 @@ const descriptions: {
     expectedStatus?: Types.GameState["status"];
     seed?: string | number;
     gridSize: Types.GridSize;
+    settings: Types.Settings;
   }[];
 }[] = [
   {
@@ -60,6 +68,7 @@ const descriptions: {
             column: 3,
           },
         ],
+        settings: standard2048Settings,
       },
       {
         title: "A single tile in row 2 moves to row 0",
@@ -88,6 +97,7 @@ const descriptions: {
             column: 3,
           },
         ],
+        settings: standard2048Settings,
       },
       {
         title: "Merging 2 tiles next to each other works",
@@ -122,6 +132,7 @@ const descriptions: {
             column: 3,
           },
         ],
+        settings: standard2048Settings,
       },
       {
         title: "Merging 2 tiles with a gap inbetween works",
@@ -156,6 +167,7 @@ const descriptions: {
             column: 3,
           },
         ],
+        settings: standard2048Settings,
       },
       {
         title: "3 same tiles merges the first 2 only",
@@ -202,6 +214,7 @@ const descriptions: {
             column: 3,
           },
         ],
+        settings: standard2048Settings,
       },
     ],
   },
@@ -235,6 +248,7 @@ const descriptions: {
             column: 0,
           },
         ],
+        settings: standard2048Settings,
       },
     ],
   },
@@ -254,6 +268,7 @@ const descriptions: {
           { tileId: 0, value: 4, row: 0, column: 0 },
           { tileId: 2, value: 2, row: 1, column: 3 },
         ],
+        settings: standard2048Settings,
       },
     ],
   },
@@ -273,6 +288,7 @@ const descriptions: {
           { tileId: 0, value: 2, row: 0, column: 3 },
           { tileId: 1, value: 4, row: 1, column: 3 },
         ],
+        settings: standard2048Settings,
       },
     ],
   },
@@ -295,6 +311,7 @@ const descriptions: {
           { tileId: 2, value: 4, row: 1, column: 0 },
           { tileId: 4, value: 2, row: 3, column: 3 },
         ],
+        settings: standard2048Settings,
       },
     ],
   },
@@ -315,6 +332,7 @@ const descriptions: {
           { tileId: 2, value: 2, row: 3, column: 3 },
         ],
         expectedStatus: "won",
+        settings: standard2048Settings,
       },
       {
         title: "Game lost when board is full and no moves left",
@@ -358,6 +376,7 @@ const descriptions: {
           { tileId: 15, value: 2, row: 3, column: 3 },
         ],
         expectedStatus: "lost",
+        settings: standard2048Settings,
       },
       {
         title: "Board full but moves left keeps playing",
@@ -401,6 +420,7 @@ const descriptions: {
           { tileId: 16, value: 2, row: 0, column: 3 },
         ],
         expectedStatus: "user-turn",
+        settings: standard2048Settings,
       },
     ],
   },
@@ -423,12 +443,16 @@ const descriptions: {
           { tileId: 3, value: 2, row: 1, column: 1 },
         ],
         expectedStatus: "won",
+        settings: standard2048Settings,
       },
     ],
   },
 ];
 
-function stateFromTilePositions(positions: TilePosition[]): Types.GameState {
+function stateFromTilePositions(
+  positions: TilePosition[],
+  settings: Types.Settings
+): Types.GameState {
   const tiles: Types.Tile[] = [];
 
   positions.forEach(({ column, tileId, row, value }) => {
@@ -445,7 +469,7 @@ function stateFromTilePositions(positions: TilePosition[]): Types.GameState {
     tiles: tiles.sort((a, b) => a.id - b.id),
     score: 0,
     status: "user-turn",
-    settings: two048.defaultSettings,
+    settings,
   };
 }
 
@@ -479,6 +503,7 @@ describe("two048 game", () => {
           randomAvailablePosition,
           seed,
           gridSize,
+          settings,
         }) => {
           test(title, () => {
             (getRandomAvailablePosition as jest.Mock).mockImplementation(
@@ -487,7 +512,7 @@ describe("two048 game", () => {
 
             const rand = withRand(seed ?? "test");
 
-            const prevState = stateFromTilePositions(prevTiles);
+            const prevState = stateFromTilePositions(prevTiles, settings);
 
             const nextState = two048.applyAction({
               state: prevState,
