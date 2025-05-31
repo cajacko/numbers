@@ -284,6 +284,75 @@ function slideTiles(
   return { tiles: newTiles, scoreIncrease, changed };
 }
 
+function requirementsMet(
+  value: Types.Value,
+  requirements: Types.ExitLocation["requirements"]
+): boolean {
+  if (value === null) return false;
+  switch (requirements.type) {
+    case "greater-than-equal-to":
+      return value >= requirements.value;
+    case "equal-to":
+      return value === requirements.value;
+    default:
+      return false;
+  }
+}
+
+function applyExitLocations(
+  state: Types.GameState,
+  gridSize: Types.GridSize
+): { changed: boolean } {
+  let changed = false;
+
+  for (const exit of state.exitLocations) {
+    let row: number;
+    let col: number;
+    let newRow: number;
+    let newCol: number;
+
+    switch (exit.side) {
+      case "top":
+        row = 0;
+        col = exit.index;
+        newRow = -1;
+        newCol = col;
+        break;
+      case "bottom":
+        row = gridSize.rows - 1;
+        col = exit.index;
+        newRow = gridSize.rows;
+        newCol = col;
+        break;
+      case "left":
+        row = exit.index;
+        col = 0;
+        newRow = row;
+        newCol = -1;
+        break;
+      case "right":
+        row = exit.index;
+        col = gridSize.columns - 1;
+        newRow = row;
+        newCol = gridSize.columns;
+        break;
+    }
+
+    const tile = state.tiles.find(
+      (t) => t.position[0] === row && t.position[1] === col
+    );
+    if (
+      tile &&
+      !tile.mergedFrom &&
+      requirementsMet(tile.value, exit.requirements)
+    ) {
+      if (moveTile(tile, newRow, newCol)) changed = true;
+    }
+  }
+
+  return { changed };
+}
+
 function spawnRandomTile(
   state: Types.GameState,
   gridSize: Types.GridSize,
@@ -395,7 +464,10 @@ const applyAction: Types.ApplyAction = ({ state, action, gridSize, rand }) => {
     score: state.score + scoreIncrease,
   };
 
-  nextState = spawnRandomTile(nextState, gridSize, rand, changed);
+  const exitResult = applyExitLocations(nextState, gridSize);
+  const overallChanged = changed || exitResult.changed;
+
+  nextState = spawnRandomTile(nextState, gridSize, rand, overallChanged);
   nextState = resolveEndState(nextState, gridSize);
 
   return nextState;
