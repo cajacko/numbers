@@ -14,7 +14,7 @@ export interface ExitLocationProps {
   tileSize: SharedValue<number>;
 }
 
-const height = 20;
+const textHeightAllowance = 20;
 
 export default function ExitLocation({
   index,
@@ -29,47 +29,63 @@ export default function ExitLocation({
     side,
   });
 
-  // Rotate the exit location based on the side and offset based of the height so it's outside the
-  // grid. And position it based on the index.
   const animatedStyle = useAnimatedStyle(() => {
+    const width =
+      side === "left" || side === "right"
+        ? textHeightAllowance
+        : tileSize.value;
+
+    const height =
+      side === "left" || side === "right"
+        ? tileSize.value
+        : textHeightAllowance;
+
     const offset = index * tileSize.value;
 
-    let transformStyle: { transform: { rotate: string }[] } = { transform: [] };
     let positionStyle: { [key: string]: number } = {};
 
     switch (side) {
       case "top":
-        transformStyle.transform.push({ rotate: "0deg" });
-        positionStyle = { top: -height, left: offset };
+        positionStyle = { top: -textHeightAllowance, left: offset };
         break;
       case "bottom":
-        transformStyle.transform.push({ rotate: "0deg" });
-        positionStyle = { bottom: -height, left: offset };
+        positionStyle = { bottom: -textHeightAllowance, left: offset };
         break;
       case "left":
-        transformStyle.transform.push({ rotate: "-90deg" });
-        positionStyle = { left: -height, top: offset };
+        positionStyle = { left: -textHeightAllowance, top: offset };
         break;
       case "right":
-        transformStyle.transform.push({ rotate: "90deg" });
-        positionStyle = { right: -height, top: offset };
+        positionStyle = { right: -textHeightAllowance, top: offset };
         break;
     }
 
     return {
       ...positionStyle,
-      ...transformStyle,
-      width: tileSize.value,
-      height: height,
+      height,
+      width,
     };
+  });
+
+  // Rotate text based on side
+  const textAnimatedStyle = useAnimatedStyle(() => {
+    switch (side) {
+      case "top":
+        return { transform: [{ rotate: "0deg" }], width: tileSize.value };
+      case "bottom":
+        return { transform: [{ rotate: "0deg" }], width: tileSize.value };
+      case "left":
+        return { transform: [{ rotate: "-90deg" }], width: tileSize.value };
+      case "right":
+        return { transform: [{ rotate: "90deg" }], width: tileSize.value };
+    }
   });
 
   return (
     <Animated.View style={[styles.container, style, animatedStyle]}>
-      <Text style={styles.text}>
+      <Animated.Text style={[styles.text, textAnimatedStyle]}>
         Exit {type === "greater-than-equal-to" ? ">=" : ""}
         {value}
-      </Text>
+      </Animated.Text>
     </Animated.View>
   );
 }
@@ -80,10 +96,9 @@ const styles = StyleSheet.create({
     zIndex: 2,
     alignItems: "center",
     justifyContent: "center",
-    height,
   },
   text: {
-    fontSize: Math.min(16, height),
+    fontSize: Math.min(16, textHeightAllowance),
     color: "white",
     textAlign: "center",
     fontWeight: "bold",
