@@ -87,9 +87,17 @@ const getInitState: Types.GetInitState = ({ rand, gridSize, settings }) => {
       {
         requirements: {
           type: "greater-than-equal-to",
-          value: 16,
+          value: 2,
         },
-        side: "top",
+        side: "bottom",
+        index: 2,
+      },
+      {
+        requirements: {
+          type: "greater-than-equal-to",
+          value: 2,
+        },
+        side: "left",
         index: 2,
       },
     ],

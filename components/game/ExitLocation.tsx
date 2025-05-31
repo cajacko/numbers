@@ -24,11 +24,6 @@ export default function ExitLocation({
   value,
   style,
 }: ExitLocationProps): React.ReactNode {
-  console.log("ExitLocation", {
-    index,
-    side,
-  });
-
   const animatedStyle = useAnimatedStyle(() => {
     const width =
       side === "left" || side === "right"
