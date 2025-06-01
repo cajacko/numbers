@@ -1,9 +1,4 @@
-import {
-  GameProvider,
-  useScore,
-  useGameState,
-  useGetTestProps,
-} from "@/components/game/Game.context";
+import { GameProvider, useGameContext } from "@/components/game/Game.context";
 import GridConnected from "@/components/game/grid/GridConnected";
 import React from "react";
 import { Button, Dimensions, StyleSheet, Text, View } from "react-native";
@@ -16,12 +11,10 @@ import * as Clipboard from "expo-clipboard";
 export interface GameProps {}
 
 function ConnectedGame(props: GameProps): React.ReactNode {
-  const score = useScore();
+  const { score, getTestProps, status } = useGameContext();
   const scoreColor = useSharedValue<string | null>("white");
-  const gameState = useGameState();
   const { gesture, reset } = useGameController();
   const insets = useSafeAreaInsets();
-  const getTestProps = useGetTestProps();
 
   const copyTestProps = React.useCallback(async () => {
     const testProps = getTestProps();
@@ -90,9 +83,9 @@ function ConnectedGame(props: GameProps): React.ReactNode {
             fontSize={20}
             maxDigits={10}
           />
-          {(gameState === "won" || gameState === "lost") && (
+          {(status === "won" || status === "lost") && (
             <Text style={styles.text}>
-              {gameState === "won" ? "You Won!" : "You Lost!"}
+              {status === "won" ? "You Won!" : "You Lost!"}
             </Text>
           )}
         </View>

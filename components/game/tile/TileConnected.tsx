@@ -10,14 +10,7 @@ import {
   useDerivedValue,
   useSharedValue,
 } from "react-native-reanimated";
-import {
-  TileAnimatingState,
-  TileState,
-  TileSubscriber,
-  useAnimationProgress,
-  useSubscribeToTile,
-  useTileInitialState,
-} from "../Game.context";
+import { TileAnimatingState, TileState, useGameContext } from "../Game.context";
 import flags from "@/constants/flags";
 
 export interface TileConnectedProps extends Pick<TileProps, "style"> {
@@ -32,22 +25,20 @@ export default React.memo(function TileConnected({
   size,
   style: styleProp,
 }: TileConnectedProps): React.ReactNode {
-  const initialState = useTileInitialState(id);
-  const animationProgress = useAnimationProgress();
+  const { animationProgress, subscribeToTile, getTile } = useGameContext();
 
-  const currentState = useSharedValue<TileState | null>(initialState);
+  const currentState = useSharedValue<TileState | null>(getTile(id));
   const nextState = useSharedValue<TileAnimatingState | null>(null);
 
-  useSubscribeToTile(
-    id,
-    React.useCallback<TileSubscriber>(
-      (_currentState, _nextState) => {
+  React.useEffect(() => {
+    const { unsubscribe } =
+      subscribeToTile?.(id, (_currentState, _nextState) => {
         currentState.value = _currentState;
         nextState.value = _nextState;
-      },
-      [currentState, nextState]
-    )
-  );
+      }) ?? {};
+
+    return unsubscribe;
+  }, [id, currentState, nextState, subscribeToTile]);
 
   const value = useDerivedValue<number | null>(() => {
     const currentValue =

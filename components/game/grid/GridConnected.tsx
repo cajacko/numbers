@@ -1,7 +1,7 @@
 import Grid, { GridProps } from "@/components/game/grid/Grid";
 import * as GameTypes from "@/game/Game.types";
 import React from "react";
-import { useGridSize, useExitLocations } from "../Game.context";
+import { useGameContext } from "../Game.context";
 
 export interface GridConnectedProps
   extends Pick<GridProps, "gesture" | "availableHeight" | "availableWidth"> {}
@@ -13,8 +13,7 @@ const tileBufferMultiplier = 4;
 export default React.memo(function GridConnected(
   props: GridConnectedProps
 ): React.ReactNode {
-  const { rows, columns } = useGridSize();
-  const exitLocations = useExitLocations();
+  const { rows, columns, exitLocations } = useGameContext();
 
   const tileIds = React.useMemo<GameTypes.TileId[]>(() => {
     return Array.from(

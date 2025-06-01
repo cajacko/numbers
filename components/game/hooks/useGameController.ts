@@ -1,11 +1,11 @@
-import { useActionHandlers } from "@/components/game/Game.context";
+import { useGameContext } from "@/components/game/Game.context";
 import * as GameTypes from "@/game/Game.types";
 import React from "react";
 import { Gesture } from "react-native-gesture-handler";
 import { runOnJS } from "react-native-reanimated";
 
 export default function useGameController() {
-  const { handleAction, reset } = useActionHandlers() ?? {};
+  const { handleAction, reset } = useGameContext();
 
   React.useEffect(() => {
     if (typeof window === "undefined") return;

@@ -5,12 +5,11 @@ import getTestPropsFromState, {
   TestProps,
 } from "@/game/utils/getTestPropsFromState";
 import useVibrate from "@/hooks/useVibrate";
-import withRand, { generateSeed } from "@/utils/withRand";
+import { generateSeed } from "@/utils/withRand";
 import React from "react";
 import {
   runOnJS,
   SharedValue,
-  useDerivedValue,
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
@@ -55,89 +54,23 @@ type GameContext = {
   reset: () => void;
   columns: number;
   rows: number;
-  score: SharedValue<number>;
+  score: SharedValue<number | null>;
   status: GameTypes.Status;
+  level: number;
   exitLocations: GameTypes.ExitLocation[];
   getTestProps: () => { current: TestProps; previous: TestProps | null };
 };
 
 const Context = React.createContext<GameContext | null>(null);
 
-export function useAnimationProgress(): SharedValue<number> {
-  const fallback = useSharedValue<number>(0);
-  const { animationProgress } = React.useContext(Context) ?? {};
+export function useGameContext(): GameContext {
+  const context = React.useContext(Context);
 
-  return useDerivedValue<number>(() => {
-    return animationProgress ? animationProgress.value : fallback.value;
-  });
-}
+  if (!context) {
+    throw new Error("useGameContext must be used within a GameProvider");
+  }
 
-export function useTileInitialState(
-  tileId: GameTypes.TileId
-): TileState | null {
-  const { getTile } = React.useContext(Context) ?? {};
-
-  return React.useMemo(() => {
-    return getTile?.(tileId) ?? null;
-  }, [tileId, getTile]);
-}
-
-export function useSubscribeToTile(
-  tileId: GameTypes.TileId,
-  callback: TileSubscriber
-) {
-  const { subscribeToTile } = React.useContext(Context) ?? {};
-
-  React.useEffect(() => {
-    const { unsubscribe } = subscribeToTile?.(tileId, callback) ?? {};
-
-    return unsubscribe;
-  }, [tileId, callback, subscribeToTile]);
-}
-
-export function useActionHandlers() {
-  const { handleAction, reset } = React.useContext(Context) ?? {};
-
-  return { handleAction, reset };
-}
-
-export function useGridSize() {
-  const { columns, rows } = React.useContext(Context) ?? {
-    columns: 4,
-    rows: 4,
-  };
-
-  return React.useMemo(() => ({ columns, rows }), [columns, rows]);
-}
-
-export function useScore() {
-  const fallback = useSharedValue<number>(0);
-  const { score } = React.useContext(Context) ?? {};
-
-  return useDerivedValue<number | null>(() => {
-    return score ? score.value : fallback.value;
-  });
-}
-
-export function useGameState(): GameTypes.Status {
-  const fallback = "user-turn";
-  const { status } = React.useContext(Context) ?? {};
-
-  return status ?? fallback;
-}
-
-export function useExitLocations() {
-  const { exitLocations } = React.useContext(Context) ?? {};
-
-  return React.useMemo(() => exitLocations ?? [], [exitLocations]);
-}
-
-export function useGetTestProps() {
-  const { getTestProps } = React.useContext(Context) ?? {};
-
-  return React.useCallback(() => {
-    return getTestProps?.() ?? { tiles: [] };
-  }, [getTestProps]);
+  return context;
 }
 
 function getCollapsingFromDirection(action: GameTypes.Action) {
@@ -157,11 +90,9 @@ function getCollapsingFromDirection(action: GameTypes.Action) {
 
 export function GameProvider(props: { children: React.ReactNode }) {
   const { vibrate } = useVibrate();
-  const [game, setGame] = React.useState<GameTypes.GameConfig>(defaultGame);
+  const [game] = React.useState<GameTypes.GameConfig>(defaultGame);
 
   const animationProgress = useSharedValue<number>(0);
-
-  const rand = React.useMemo(() => withRand(generateSeed()), []);
   const callbacks = React.useRef<Record<GameTypes.TileId, TileSubscriber>>({});
 
   const currentStateRef = React.useRef(
@@ -178,8 +109,10 @@ export function GameProvider(props: { children: React.ReactNode }) {
 
   const prevStateRef = React.useRef<GameTypes.GameState | null>(null);
   const nextStateRef = React.useRef<GameTypes.GameState | null>(null);
-
-  const score = useSharedValue<number>(currentStateRef.current.score);
+  const [level, setLevel] = React.useState<number>(
+    currentStateRef.current.level
+  );
+  const score = useSharedValue<number | null>(currentStateRef.current.score);
   const [status, setStatus] = React.useState<GameTypes.Status>(
     currentStateRef.current.status
   );
@@ -450,6 +383,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
       initSeed: generateSeed(),
     });
 
+    setLevel(currentStateRef.current.level);
     setSettings(currentStateRef.current.settings);
     setStatus(currentStateRef.current.status);
     score.value = currentStateRef.current.score;
@@ -478,7 +412,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
     };
   }, []);
 
-  const value = React.useMemo<GameContext>(() => {
+  const value = React.useMemo<GameContext>((): GameContext => {
     const exitLocations: GameTypes.ExitLocation[] = [];
 
     settings.goals.forEach((goal) => {
@@ -496,11 +430,11 @@ export function GameProvider(props: { children: React.ReactNode }) {
       reset,
       score,
       status,
-      setGame,
       getTestProps,
       columns: settings.gridSize.columns,
       rows: settings.gridSize.rows,
       exitLocations,
+      level,
     };
   }, [
     game,
@@ -513,6 +447,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
     status,
     getTestProps,
     settings,
+    level,
   ]);
 
   return <Context.Provider value={value}>{props.children}</Context.Provider>;
