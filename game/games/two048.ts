@@ -450,6 +450,18 @@ function resolveEndState(
 ): Types.GameState {
   const { rows, columns } = gridSize;
 
+  const tileExited = state.tiles.some(
+    (t) =>
+      t.position[0] < 0 ||
+      t.position[0] >= rows ||
+      t.position[1] < 0 ||
+      t.position[1] >= columns
+  );
+
+  if (tileExited) {
+    return { ...state, status: "won" };
+  }
+
   if (
     state.tiles.some(
       (t) => t.value !== null && t.value >= getGoalFromGridSize(gridSize)
