@@ -8,6 +8,7 @@ import {
   useGetTestProps,
 } from "@/components/game/Game.context";
 import games from "@/game/games";
+import * as GameTypes from "@/game/Game.types";
 import GridConnected from "@/components/game/grid/GridConnected";
 import React from "react";
 import { Button, Dimensions, StyleSheet, Text, View } from "react-native";
@@ -31,6 +32,30 @@ function ConnectedGame(props: GameProps): React.ReactNode {
   const { game, setGame } = useSetGame();
   const selectedGame = game?.name;
   const getTestProps = useGetTestProps();
+
+  React.useEffect(() => {
+    if (gameState !== "won") return;
+
+    const timer = setTimeout(() => {
+      const two048 = games.find((g) => g.name === "2048");
+      if (!two048) return;
+
+      const randomSettings: GameTypes.Settings = {
+        zeroTiles: Math.random() < 0.5,
+        permZeroTileCount: Math.floor(Math.random() * 3),
+        randomFixedTiles:
+          Math.random() < 0.5 ? null : Math.floor(Math.random() * 3),
+        newTileValue: Math.random() < 0.5 ? 1 : 2,
+      };
+
+      setRows?.(two048.defaultGridSize.rows);
+      setColumns?.(two048.defaultGridSize.columns);
+
+      setGame({ ...two048, defaultSettings: randomSettings });
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, [gameState, setGame, setRows, setColumns]);
 
   const copyTestProps = React.useCallback(async () => {
     const testProps = getTestProps();
