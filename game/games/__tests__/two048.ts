@@ -588,6 +588,58 @@ const descriptions: {
           },
         ],
       },
+      {
+        title:
+          "A valid exit tile sliding next to an exit location does not leave if the direction does not move it out",
+        gridSize: { rows: 4, columns: 4 },
+        randomAvailablePosition: [1, 2],
+        prevTiles: [
+          {
+            tileId: 0,
+            value: 2,
+            row: 3,
+            column: 0,
+          },
+          {
+            tileId: 1,
+            value: 1,
+            row: 3,
+            column: 1,
+          },
+        ],
+        applyAction: "right",
+        expectedPositions: [
+          {
+            tileId: 0,
+            value: 2,
+            row: 3,
+            column: 2,
+          },
+          {
+            tileId: 1,
+            value: 1,
+            row: 3,
+            column: 3,
+          },
+          {
+            tileId: 2,
+            value: 2,
+            row: 1,
+            column: 2,
+          },
+        ],
+        settings: standard2048Settings,
+        exitLocations: [
+          {
+            requirements: {
+              type: "greater-than-equal-to",
+              value: 2,
+            },
+            side: "bottom",
+            index: 2,
+          },
+        ],
+      },
     ],
   },
 ];

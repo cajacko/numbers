@@ -323,9 +323,22 @@ function requirementsMet(
   }
 }
 
+const actionToExitLocationSide: Record<
+  Types.Action,
+  Types.ExitLocation["side"] | null
+> = {
+  up: "top",
+  down: "bottom",
+  left: "left",
+  right: "right",
+  tap: null,
+  tick: null,
+};
+
 function applyExitLocations(
   state: Types.GameState,
-  gridSize: Types.GridSize
+  gridSize: Types.GridSize,
+  action: Types.Action
 ): { changed: boolean } {
   let changed = false;
 
@@ -368,7 +381,8 @@ function applyExitLocations(
     if (
       tile &&
       !tile.mergedFrom &&
-      requirementsMet(tile.value, exit.requirements)
+      requirementsMet(tile.value, exit.requirements) &&
+      actionToExitLocationSide[action] === exit.side
     ) {
       if (moveTile(tile, newRow, newCol)) changed = true;
     }
@@ -488,7 +502,7 @@ const applyAction: Types.ApplyAction = ({ state, action, gridSize, rand }) => {
     score: state.score + scoreIncrease,
   };
 
-  const exitResult = applyExitLocations(nextState, gridSize);
+  const exitResult = applyExitLocations(nextState, gridSize, action);
   const overallChanged = changed || exitResult.changed;
 
   nextState = spawnRandomTile(nextState, gridSize, rand, overallChanged);
