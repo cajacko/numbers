@@ -31,6 +31,27 @@ function getSeedNumber(seed: number | string): number {
   return seed;
 }
 
-export default function withRand(seed: string | number = generateSeed()) {
-  return mulberry32(getSeedNumber(seed));
+// Rand is a function that when called with an array, returns a random element from that array. and
+// if called with nothing it returns a random number between 0 and 1.
+export type Rand = {
+  <T extends any[]>(array: T): T[number];
+  (): number;
+};
+
+export default function withRand(seed: string | number = generateSeed()): Rand {
+  const rand = mulberry32(getSeedNumber(seed));
+
+  return <T extends any[]>(arr?: T): T[number] | number => {
+    if (!arr) {
+      return rand();
+    }
+
+    if (arr.length === 0) {
+      throw new Error("Array cannot be empty");
+    }
+
+    const randomIndex = Math.floor(rand() * arr.length);
+
+    return arr[randomIndex];
+  };
 }

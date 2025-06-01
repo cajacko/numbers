@@ -132,4 +132,9 @@ export type Diff =
   | DiffRemove
   | DiffValueChange;
 
-export type Rand = () => number;
+// Rand is a function that when called with an array, returns a random element from that array. and
+// if called with nothing it returns a random number between 0 and 1.
+export type Rand = {
+  <T extends any[]>(array: T): T[number];
+  (): number;
+};

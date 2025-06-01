@@ -96,13 +96,46 @@ function spawnExitLocation({
   return state;
 }
 
+const sides: Types.ExitLocation["side"][] = ["top", "bottom", "left", "right"];
+
 const getInitState = ({
   rand,
-  settings,
+  initSeed,
 }: {
   rand: Types.Rand;
-  settings: Types.Settings;
+  initSeed: string;
 }): Types.GameState => {
+  const gridSize: Types.GridSize = { rows: 4, columns: 4 };
+
+  const side = rand(sides);
+  const maxIndex =
+    side === "top" || side === "bottom"
+      ? gridSize.columns - 1
+      : gridSize.rows - 1;
+  const index = Math.floor(rand() * maxIndex);
+
+  const settings: Types.Settings = {
+    gridSize,
+    zeroTiles: false,
+    permZeroTileCount: 0,
+    randomFixedTiles: null,
+    newTileValue: 1,
+    goals: [
+      {
+        type: "exit-location",
+        payload: {
+          side,
+          index,
+          requirements: {
+            type: "greater-than-equal-to",
+            value: 16,
+          },
+        },
+      },
+    ],
+    seed: initSeed,
+  };
+
   let nextState: Types.GameState = {
     tiles: [],
     score: 0,
@@ -518,27 +551,7 @@ const applyAction: Types.ApplyAction = ({ state, action, initSeed }) => {
 
     return getInitState({
       rand,
-      settings: state?.settings || {
-        gridSize: { rows: 4, columns: 4 },
-        zeroTiles: false,
-        permZeroTileCount: 0,
-        randomFixedTiles: null,
-        newTileValue: 1,
-        goals: [
-          {
-            type: "exit-location",
-            payload: {
-              side: "top",
-              index: 0,
-              requirements: {
-                type: "greater-than-equal-to",
-                value: 16,
-              },
-            },
-          },
-        ],
-        seed: initSeed,
-      },
+      initSeed,
     });
   }
 
