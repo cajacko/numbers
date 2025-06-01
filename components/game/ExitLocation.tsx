@@ -78,8 +78,8 @@ export default function ExitLocation({
   return (
     <Animated.View style={[styles.container, style, animatedStyle]}>
       <Animated.Text style={[styles.text, textAnimatedStyle]}>
-        Exit {type === "greater-than-equal-to" ? ">=" : ""}
         {value}
+        {type === "greater-than-equal-to" ? "+" : ""}
       </Animated.Text>
     </Animated.View>
   );

@@ -100,6 +100,22 @@ const getInitState: Types.GetInitState = ({ rand, gridSize, settings }) => {
         side: "left",
         index: 2,
       },
+      {
+        requirements: {
+          type: "greater-than-equal-to",
+          value: 2,
+        },
+        side: "right",
+        index: 2,
+      },
+      {
+        requirements: {
+          type: "greater-than-equal-to",
+          value: 2,
+        },
+        side: "top",
+        index: 2,
+      },
     ],
   };
 
@@ -491,9 +507,9 @@ const gameConfig: Types.GameConfig = {
     columns: 4,
   },
   defaultSettings: {
-    zeroTiles: true,
+    zeroTiles: false,
     permZeroTileCount: 2,
-    randomFixedTiles: 1,
+    randomFixedTiles: 0,
     newTileValue: 1,
   },
 };
