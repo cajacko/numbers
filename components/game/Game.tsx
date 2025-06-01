@@ -11,7 +11,7 @@ import * as Clipboard from "expo-clipboard";
 export interface GameProps {}
 
 function ConnectedGame(props: GameProps): React.ReactNode {
-  const { score, getTestProps, status } = useGameContext();
+  const { score, getTestProps, status, level } = useGameContext();
   const scoreColor = useSharedValue<string | null>("white");
   const { gesture, reset } = useGameController();
   const insets = useSafeAreaInsets();
@@ -77,6 +77,8 @@ function ConnectedGame(props: GameProps): React.ReactNode {
     <>
       <View style={styles.container} onLayout={onLayout}>
         <View style={headerStyle}>
+          <Text style={styles.text}>Level: {level}</Text>
+          <Text style={styles.text}>- </Text>
           <Number
             color={scoreColor}
             value={score}

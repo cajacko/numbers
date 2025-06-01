@@ -4,7 +4,13 @@ import uuid from "./uuid";
  * Generates a random seed using UUIDs.
  * @returns A new random seed string.
  */
-export function generateSeed(): string {
+export function generateSeed(rand?: Rand): string {
+  if (rand) {
+    return Array.from({ length: 16 }, () =>
+      Math.floor(rand() * 16).toString(16)
+    ).join("");
+  }
+
   return uuid();
 }
 

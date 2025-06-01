@@ -2,7 +2,7 @@ import * as Types from "@/game/Game.types";
 import spawnTile from "@/game/utils/spawnTile";
 import createPositionMap from "@/game/utils/createPositionMap";
 import getAvailablePositions from "@/game/utils/getAvailablePositions";
-import withRand from "@/utils/withRand";
+import withRand, { generateSeed } from "@/utils/withRand";
 
 const supportedActions: Types.Action[] = ["up", "down", "left", "right"];
 
@@ -555,22 +555,31 @@ const applyAction: Types.ApplyAction = ({ state, action, initSeed }) => {
     });
   }
 
-  const rand = withRand(state.settings.seed);
-
   if (!supportedActions.includes(action)) {
     return state;
   }
 
-  const gridSize: Types.GridSize = state.settings.gridSize;
+  const rand = withRand(state.settings.seed);
+  const nextSeed = generateSeed(rand);
+
+  let nextState: Types.GameState = {
+    ...state,
+    settings: {
+      ...state.settings,
+      seed: nextSeed,
+    },
+  };
+
+  const gridSize: Types.GridSize = nextState.settings.gridSize;
 
   const { tiles, scoreIncrease, changed } = slideTiles(
-    state.tiles,
+    nextState.tiles,
     action,
     gridSize
   );
 
-  let nextState: Types.GameState = {
-    ...state,
+  nextState = {
+    ...nextState,
     tiles,
     score: state.score + scoreIncrease,
   };
