@@ -6,6 +6,9 @@ const settings: Types.Settings = {
   zeroTiles: false,
   permZeroTileCount: 0,
   randomFixedTiles: null,
+  goals: [],
+  gridSize: { rows: 4, columns: 4 },
+  seed: "123",
 };
 
 function createTile(
@@ -31,7 +34,7 @@ describe("getGameStateDiffs", () => {
       score: 0,
       status: "user-turn",
       settings,
-      exitLocations: [],
+      level: 1,
     };
     const tile = createTile(0, 0, 0, 2);
     const next: Types.GameState = {
@@ -39,7 +42,7 @@ describe("getGameStateDiffs", () => {
       score: 0,
       status: "user-turn",
       settings,
-      exitLocations: [],
+      level: 1,
     };
 
     const diffs = getGameStateDiffs(prev, next);
@@ -65,7 +68,7 @@ describe("getGameStateDiffs", () => {
       score: 0,
       status: "user-turn",
       settings,
-      exitLocations: [],
+      level: 1,
     };
     const movedTile = { ...prevTile, position: [0, 1] as Types.Position };
     const next: Types.GameState = {
@@ -73,7 +76,7 @@ describe("getGameStateDiffs", () => {
       score: 0,
       status: "user-turn",
       settings,
-      exitLocations: [],
+      level: 1,
     };
 
     const diffs = getGameStateDiffs(prev, next);
@@ -98,7 +101,7 @@ describe("getGameStateDiffs", () => {
       score: 0,
       status: "user-turn",
       settings,
-      exitLocations: [],
+      level: 1,
     };
     const mergedTile: Types.Tile = {
       ...tileA,
@@ -113,7 +116,7 @@ describe("getGameStateDiffs", () => {
       score: 0,
       status: "user-turn",
       settings,
-      exitLocations: [],
+      level: 1,
     };
 
     const diffs = getGameStateDiffs(prev, next);
@@ -149,7 +152,7 @@ describe("getGameStateDiffs", () => {
       score: 0,
       status: "user-turn",
       settings,
-      exitLocations: [],
+      level: 1,
     };
     // tileB is removed, tileA remains unchanged
     const next: Types.GameState = {
@@ -157,7 +160,7 @@ describe("getGameStateDiffs", () => {
       score: 0,
       status: "user-turn",
       settings,
-      exitLocations: [],
+      level: 1,
     };
 
     const diffs = getGameStateDiffs(prev, next);
@@ -180,7 +183,7 @@ describe("getGameStateDiffs", () => {
       score: 0,
       status: "user-turn",
       settings,
-      exitLocations: [],
+      level: 1,
     };
     const mergedTile: Types.Tile = {
       ...tileA,
@@ -195,7 +198,7 @@ describe("getGameStateDiffs", () => {
       score: 0,
       status: "user-turn",
       settings,
-      exitLocations: [],
+      level: 1,
     };
 
     const diffs = getGameStateDiffs(prev, next);
@@ -217,7 +220,7 @@ describe("getGameStateDiffs", () => {
       score: 0,
       status: "user-turn",
       settings,
-      exitLocations: [],
+      level: 1,
     };
     // Only the value changes, position and id stay the same, no merge
     const changedTile = { ...prevTile, value: 4 };
@@ -226,7 +229,7 @@ describe("getGameStateDiffs", () => {
       score: 0,
       status: "user-turn",
       settings,
-      exitLocations: [],
+      level: 1,
     };
 
     const diffs = getGameStateDiffs(prev, next);
@@ -252,7 +255,7 @@ describe("getGameStateDiffs", () => {
       score: 0,
       status: "user-turn",
       settings,
-      exitLocations: [],
+      level: 1,
     };
     const mergedTile: Types.Tile = {
       ...tileA,
@@ -267,7 +270,7 @@ describe("getGameStateDiffs", () => {
       score: 0,
       status: "user-turn",
       settings,
-      exitLocations: [],
+      level: 1,
     };
 
     const diffs = getGameStateDiffs(prev, next);
@@ -302,14 +305,14 @@ describe("getGameStateDiffs", () => {
       score: 0,
       status: "user-turn",
       settings,
-      exitLocations: [],
+      level: 1,
     };
     const next: Types.GameState = {
       tiles: [nextTile],
       score: 0,
       status: "user-turn",
       settings,
-      exitLocations: [],
+      level: 1,
     };
 
     const diffs = getGameStateDiffs(prev, next);

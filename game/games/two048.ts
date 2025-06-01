@@ -2,6 +2,7 @@ import * as Types from "@/game/Game.types";
 import spawnTile from "@/game/utils/spawnTile";
 import createPositionMap from "@/game/utils/createPositionMap";
 import getAvailablePositions from "@/game/utils/getAvailablePositions";
+import withRand from "@/utils/withRand";
 
 const supportedActions: Types.Action[] = ["up", "down", "left", "right"];
 
@@ -77,52 +78,63 @@ function spawnTiles({
   return nextState;
 }
 
-const getInitState: Types.GetInitState = ({ rand, gridSize, settings }) => {
+/**
+ * Randomly spawn an exit location in an available space on the grid.
+ */
+function spawnExitLocation({
+  gridSize,
+  rand,
+  state,
+  requirements,
+}: {
+  state: Types.GameState;
+  gridSize: Types.GridSize;
+  rand: Types.Rand;
+  requirements: Types.ExitLocation["requirements"];
+}): Types.GameState {
+  // TODO: Fill me in
+  return state;
+}
+
+const getInitState = ({
+  rand,
+  settings,
+}: {
+  rand: Types.Rand;
+  settings: Types.Settings;
+}): Types.GameState => {
   let nextState: Types.GameState = {
     tiles: [],
     score: 0,
     status: "user-turn",
     settings,
-    exitLocations: [
-      {
-        requirements: {
-          type: "greater-than-equal-to",
-          value: 2,
-        },
-        side: "bottom",
-        index: 2,
-      },
-      {
-        requirements: {
-          type: "greater-than-equal-to",
-          value: 2,
-        },
-        side: "left",
-        index: 2,
-      },
-      {
-        requirements: {
-          type: "greater-than-equal-to",
-          value: 2,
-        },
-        side: "right",
-        index: 2,
-      },
-      {
-        requirements: {
-          type: "greater-than-equal-to",
-          value: 2,
-        },
-        side: "top",
-        index: 2,
-      },
-    ],
+    level: 1,
   };
+
+  nextState = spawnExitLocation({
+    state: nextState,
+    gridSize: settings.gridSize,
+    rand,
+    requirements: {
+      type: "greater-than-equal-to",
+      value: 16,
+    },
+  });
+
+  nextState = spawnExitLocation({
+    state: nextState,
+    gridSize: settings.gridSize,
+    rand,
+    requirements: {
+      type: "greater-than-equal-to",
+      value: 16,
+    },
+  });
 
   if (settings.randomFixedTiles) {
     nextState = spawnTiles({
       state: nextState,
-      gridSize,
+      gridSize: settings.gridSize,
       rand,
       count: settings.randomFixedTiles,
       value: null,
@@ -132,7 +144,7 @@ const getInitState: Types.GetInitState = ({ rand, gridSize, settings }) => {
   if (settings.zeroTiles) {
     nextState = spawnTiles({
       state: nextState,
-      gridSize,
+      gridSize: settings.gridSize,
       rand,
       count: settings.permZeroTileCount,
       value: 0,
@@ -141,7 +153,7 @@ const getInitState: Types.GetInitState = ({ rand, gridSize, settings }) => {
 
   nextState = spawnTiles({
     state: nextState,
-    gridSize,
+    gridSize: settings.gridSize,
     rand,
     count: 2,
     value: settings.newTileValue,
@@ -333,6 +345,7 @@ const actionToExitLocationSide: Record<
   right: "right",
   tap: null,
   tick: null,
+  init: null,
 };
 
 function applyExitLocations(
@@ -342,33 +355,35 @@ function applyExitLocations(
 ): { changed: boolean } {
   let changed = false;
 
-  for (const exit of state.exitLocations) {
+  for (const exit of state.settings.goals) {
+    if (exit.type !== "exit-location") continue;
+
     let row: number;
     let col: number;
     let newRow: number;
     let newCol: number;
 
-    switch (exit.side) {
+    switch (exit.payload.side) {
       case "top":
         row = 0;
-        col = exit.index;
+        col = exit.payload.index;
         newRow = -1;
         newCol = col;
         break;
       case "bottom":
         row = gridSize.rows - 1;
-        col = exit.index;
+        col = exit.payload.index;
         newRow = gridSize.rows;
         newCol = col;
         break;
       case "left":
-        row = exit.index;
+        row = exit.payload.index;
         col = 0;
         newRow = row;
         newCol = -1;
         break;
       case "right":
-        row = exit.index;
+        row = exit.payload.index;
         col = gridSize.columns - 1;
         newRow = row;
         newCol = gridSize.columns;
@@ -381,8 +396,8 @@ function applyExitLocations(
     if (
       tile &&
       !tile.mergedFrom &&
-      requirementsMet(tile.value, exit.requirements) &&
-      actionToExitLocationSide[action] === exit.side
+      requirementsMet(tile.value, exit.payload.requirements) &&
+      actionToExitLocationSide[action] === exit.payload.side
     ) {
       if (moveTile(tile, newRow, newCol)) changed = true;
     }
@@ -497,10 +512,43 @@ function resolveEndState(
   return state;
 }
 
-const applyAction: Types.ApplyAction = ({ state, action, gridSize, rand }) => {
+const applyAction: Types.ApplyAction = ({ state, action, initSeed }) => {
+  if (!state || action === "init") {
+    const rand = withRand(initSeed);
+
+    return getInitState({
+      rand,
+      settings: state?.settings || {
+        gridSize: { rows: 4, columns: 4 },
+        zeroTiles: false,
+        permZeroTileCount: 0,
+        randomFixedTiles: null,
+        newTileValue: 1,
+        goals: [
+          {
+            type: "exit-location",
+            payload: {
+              side: "top",
+              index: 0,
+              requirements: {
+                type: "greater-than-equal-to",
+                value: 16,
+              },
+            },
+          },
+        ],
+        seed: initSeed,
+      },
+    });
+  }
+
+  const rand = withRand(state.settings.seed);
+
   if (!supportedActions.includes(action)) {
     return state;
   }
+
+  const gridSize: Types.GridSize = state.settings.gridSize;
 
   const { tiles, scoreIncrease, changed } = slideTiles(
     state.tiles,
@@ -526,18 +574,7 @@ const applyAction: Types.ApplyAction = ({ state, action, gridSize, rand }) => {
 const gameConfig: Types.GameConfig = {
   supportedActions,
   name: "2048",
-  getInitState,
   applyAction,
-  defaultGridSize: {
-    rows: 4,
-    columns: 4,
-  },
-  defaultSettings: {
-    zeroTiles: false,
-    permZeroTileCount: 2,
-    randomFixedTiles: 0,
-    newTileValue: 1,
-  },
 };
 
 export default gameConfig;

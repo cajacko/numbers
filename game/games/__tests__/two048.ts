@@ -1,4 +1,3 @@
-import withRand from "@/utils/withRand";
 import two048, { getColorsFromValue } from "../two048";
 import * as Types from "@/game/Game.types";
 import getTestPropsFromState, {
@@ -18,6 +17,14 @@ const standard2048Settings: Types.Settings = {
   zeroTiles: false,
   permZeroTileCount: 0,
   randomFixedTiles: null,
+  seed: "123",
+  gridSize: { rows: 4, columns: 4 },
+  goals: [
+    {
+      type: "tile-value",
+      payload: 2048,
+    },
+  ],
 };
 
 const descriptions: {
@@ -29,7 +36,6 @@ const descriptions: {
     randomAvailablePosition: Types.Position | null;
     expectedPositions?: TilePosition[];
     expectedStatus?: Types.GameState["status"];
-    seed?: string | number;
     gridSize: Types.GridSize;
     settings: Types.Settings;
     exitLocations?: Types.ExitLocation[];
@@ -648,8 +654,7 @@ const descriptions: {
 
 function stateFromTilePositions(
   positions: TilePosition[],
-  settings: Types.Settings,
-  exitLocations: Types.ExitLocation[] = []
+  settings: Types.Settings
 ): Types.GameState {
   const tiles: Types.Tile[] = [];
 
@@ -668,7 +673,7 @@ function stateFromTilePositions(
     score: 0,
     status: "user-turn",
     settings,
-    exitLocations,
+    level: 1,
   };
 }
 
@@ -683,7 +688,6 @@ describe("two048 game", () => {
           prevTiles,
           expectedPositions,
           randomAvailablePosition,
-          seed,
           gridSize,
           settings,
           exitLocations,
@@ -693,19 +697,24 @@ describe("two048 game", () => {
               () => randomAvailablePosition
             );
 
-            const rand = withRand(seed ?? "test");
-
-            const prevState = stateFromTilePositions(
-              prevTiles,
-              settings,
-              exitLocations ?? []
-            );
+            const prevState = stateFromTilePositions(prevTiles, {
+              ...settings,
+              gridSize,
+              goals: [
+                ...settings.goals,
+                ...(exitLocations || []).map(
+                  (payload): Types.Goal => ({
+                    type: "exit-location",
+                    payload,
+                  })
+                ),
+              ],
+            });
 
             const nextState = two048.applyAction({
               state: prevState,
               action: applyAction,
-              gridSize,
-              rand,
+              initSeed: "123",
             });
 
             if (expectedStatus) {

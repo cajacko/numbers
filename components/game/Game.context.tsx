@@ -53,9 +53,6 @@ type GameContext = {
     }
   ) => void;
   reset: () => void;
-  setRows: (rows: number) => void;
-  setColumns: (columns: number) => void;
-  setGame: (game: GameTypes.GameConfig) => void;
   columns: number;
   rows: number;
   score: SharedValue<number>;
@@ -104,12 +101,6 @@ export function useActionHandlers() {
   return { handleAction, reset };
 }
 
-export function useSetGridSize() {
-  const { setRows, setColumns } = React.useContext(Context) ?? {};
-
-  return { setRows, setColumns };
-}
-
 export function useGridSize() {
   const { columns, rows } = React.useContext(Context) ?? {
     columns: 4,
@@ -133,20 +124,6 @@ export function useGameState(): GameTypes.Status {
   const { status } = React.useContext(Context) ?? {};
 
   return status ?? fallback;
-}
-
-export function useSetGame() {
-  const { setGame, game } = React.useContext(Context) ?? {};
-
-  return {
-    setGame: React.useCallback(
-      (game: GameTypes.GameConfig) => {
-        setGame?.(game);
-      },
-      [setGame]
-    ),
-    game,
-  };
 }
 
 export function useExitLocations() {
@@ -185,20 +162,18 @@ export function GameProvider(props: { children: React.ReactNode }) {
   const animationProgress = useSharedValue<number>(0);
 
   const rand = React.useMemo(() => withRand(generateSeed()), []);
-
-  const [columns, setColumns] = React.useState<number>(
-    game.defaultGridSize.columns
-  );
-  const [rows, setRows] = React.useState<number>(game.defaultGridSize.rows);
-
   const callbacks = React.useRef<Record<GameTypes.TileId, TileSubscriber>>({});
 
   const currentStateRef = React.useRef(
-    game.getInitState({
-      gridSize: { columns, rows },
-      rand,
-      settings: game.defaultSettings,
+    game.applyAction({
+      state: null,
+      action: "init",
+      initSeed: generateSeed(),
     })
+  );
+
+  const [settings, setSettings] = React.useState<GameTypes.Settings>(
+    currentStateRef.current.settings
   );
 
   const prevStateRef = React.useRef<GameTypes.GameState | null>(null);
@@ -283,9 +258,8 @@ export function GameProvider(props: { children: React.ReactNode }) {
 
       const nextState = game.applyAction({
         action,
-        gridSize: { columns, rows },
         state: currentStateRef.current,
-        rand,
+        initSeed: generateSeed(),
       });
 
       nextStateRef.current = nextState;
@@ -464,38 +438,24 @@ export function GameProvider(props: { children: React.ReactNode }) {
         }
       );
     },
-    [
-      game,
-      getTile,
-      animationProgress,
-      rand,
-      setAllToCurrentState,
-      rows,
-      columns,
-      vibrate,
-      score,
-    ]
+    [game, getTile, animationProgress, setAllToCurrentState, vibrate, score]
   );
-
-  const [exitLocations, setExitLocations] = React.useState<
-    GameTypes.ExitLocation[]
-  >(currentStateRef.current.exitLocations);
 
   const reset = React.useCallback<GameContext["reset"]>(() => {
     prevStateRef.current = currentStateRef.current;
-    currentStateRef.current = game.getInitState({
-      gridSize: { columns, rows },
-      rand,
-      settings: game.defaultSettings,
+
+    currentStateRef.current = game.applyAction({
+      action: "init",
+      state: null,
+      initSeed: generateSeed(),
     });
 
-    setExitLocations(currentStateRef.current.exitLocations);
-
+    setSettings(currentStateRef.current.settings);
     setStatus(currentStateRef.current.status);
     score.value = currentStateRef.current.score;
 
     setAllToCurrentState();
-  }, [game, rand, setAllToCurrentState, rows, columns, score]);
+  }, [game, setAllToCurrentState, score]);
 
   const init = React.useRef(true);
 
@@ -518,41 +478,42 @@ export function GameProvider(props: { children: React.ReactNode }) {
     };
   }, []);
 
-  const value = React.useMemo<GameContext>(
-    () => ({
+  const value = React.useMemo<GameContext>(() => {
+    const exitLocations: GameTypes.ExitLocation[] = [];
+
+    settings.goals.forEach((goal) => {
+      if (goal.type === "exit-location") {
+        exitLocations.push(goal.payload);
+      }
+    });
+
+    return {
       game,
       subscribeToTile,
       getTile,
       animationProgress,
       handleAction,
       reset,
-      setRows,
-      setColumns,
-      columns,
-      rows,
       score,
       status,
       setGame,
-      exitLocations,
       getTestProps,
-    }),
-    [
-      game,
-      subscribeToTile,
-      animationProgress,
-      getTile,
-      handleAction,
-      reset,
-      setRows,
-      setColumns,
-      columns,
-      rows,
-      score,
-      status,
+      columns: settings.gridSize.columns,
+      rows: settings.gridSize.rows,
       exitLocations,
-      getTestProps,
-    ]
-  );
+    };
+  }, [
+    game,
+    subscribeToTile,
+    animationProgress,
+    getTile,
+    handleAction,
+    reset,
+    score,
+    status,
+    getTestProps,
+    settings,
+  ]);
 
   return <Context.Provider value={value}>{props.children}</Context.Provider>;
 }

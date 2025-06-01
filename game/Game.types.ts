@@ -13,58 +13,67 @@ export type Tile = {
   textColor: string;
 };
 
-export type Settings = {
-  zeroTiles: boolean;
-  permZeroTileCount: number;
-  randomFixedTiles: number | null;
-  newTileValue: number;
-};
-
 export type Status = "user-turn" | "ai-turn" | "won" | "lost";
 
-export type Action = "up" | "down" | "left" | "right" | "tap" | "tick";
+export type Action = "up" | "down" | "left" | "right" | "tap" | "tick" | "init";
 
 export type GridSize = {
   rows: number;
   columns: number;
 };
 
+export type ExitLocationRequirement = {
+  type: "greater-than-equal-to" | "equal-to";
+  value: number;
+};
+
 export type ExitLocation = {
   side: "top" | "bottom" | "left" | "right";
   index: number;
-  requirements:
-    | { type: "greater-than-equal-to"; value: number }
-    | { type: "equal-to"; value: number };
+  requirements: ExitLocationRequirement;
+};
+
+export type Goal =
+  | {
+      type: "exit-location";
+      payload: ExitLocation;
+    }
+  | {
+      type: "tile-value";
+      payload: number;
+    };
+
+export type Settings = {
+  gridSize: GridSize;
+  zeroTiles: boolean;
+  permZeroTileCount: number;
+  randomFixedTiles: number | null;
+  newTileValue: number;
+  goals: Goal[];
+  seed: string;
 };
 
 export type GameState = {
   tiles: Tile[];
   score: number;
   status: Status;
+  level: number;
   settings: Settings;
-  exitLocations: ExitLocation[];
 };
 
-export type GetInitState = (props: {
-  gridSize: GridSize;
-  rand: Rand;
-  settings: Settings;
-}) => GameState;
-
 export type ApplyAction = (props: {
-  state: GameState;
+  /**
+   * null if the game is not initialized yet.
+   */
+  state: GameState | null;
   action: Action;
-  gridSize: GridSize;
-  rand: Rand;
+  initSeed: string; // Only used for the first null action
 }) => GameState;
 
 export type GameConfig = {
   supportedActions: Action[];
   name: string;
-  getInitState: GetInitState;
   applyAction: ApplyAction;
-  defaultGridSize: GridSize;
-  defaultSettings: Settings;
 };
 
 type CreateDiffType<T extends string, P> = {
