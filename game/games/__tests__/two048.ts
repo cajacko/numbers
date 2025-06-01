@@ -1,6 +1,9 @@
 import withRand from "@/utils/withRand";
 import two048, { getColorsFromValue } from "../two048";
 import * as Types from "@/game/Game.types";
+import getTestPropsFromState, {
+  TilePosition,
+} from "@/game/utils/getTestPropsFromState";
 
 jest.mock("../../utils/getRandomAvailablePosition", () => ({
   __esModule: true,
@@ -9,13 +12,6 @@ jest.mock("../../utils/getRandomAvailablePosition", () => ({
 
 // eslint-disable-next-line import/first
 import getRandomAvailablePosition from "../../utils/getRandomAvailablePosition";
-
-type TilePosition = {
-  tileId: number;
-  value: Types.Value;
-  row: number;
-  column: number;
-};
 
 const standard2048Settings: Types.Settings = {
   newTileValue: 2,
@@ -36,6 +32,7 @@ const descriptions: {
     seed?: string | number;
     gridSize: Types.GridSize;
     settings: Types.Settings;
+    exitLocations?: Types.ExitLocation[];
   }[];
 }[] = [
   {
@@ -486,11 +483,171 @@ const descriptions: {
       },
     ],
   },
+  {
+    title: "Exit locations",
+    cases: [
+      {
+        title: "Tile exits when reaching top exit location",
+        gridSize: { rows: 4, columns: 4 },
+        randomAvailablePosition: [3, 3],
+        prevTiles: [{ tileId: 0, value: 16, row: 1, column: 2 }],
+        applyAction: "up",
+        expectedPositions: [
+          { tileId: 0, value: 16, row: -1, column: 2 },
+          { tileId: 1, value: 2, row: 3, column: 3 },
+        ],
+        settings: standard2048Settings,
+        exitLocations: [
+          {
+            side: "top",
+            index: 2,
+            requirements: { type: "greater-than-equal-to", value: 16 },
+          },
+        ],
+      },
+      {
+        title: "Tile does not exit when value is too low",
+        gridSize: { rows: 4, columns: 4 },
+        randomAvailablePosition: [3, 3],
+        prevTiles: [{ tileId: 0, value: 8, row: 1, column: 2 }],
+        applyAction: "up",
+        expectedPositions: [
+          { tileId: 0, value: 8, row: 0, column: 2 },
+          { tileId: 1, value: 2, row: 3, column: 3 },
+        ],
+        settings: standard2048Settings,
+        exitLocations: [
+          {
+            side: "top",
+            index: 2,
+            requirements: { type: "greater-than-equal-to", value: 16 },
+          },
+        ],
+      },
+      {
+        title: "Merged tile does not exit",
+        gridSize: { rows: 4, columns: 4 },
+        randomAvailablePosition: [3, 3],
+        prevTiles: [
+          { tileId: 0, value: 8, row: 0, column: 2 },
+          { tileId: 1, value: 8, row: 1, column: 2 },
+        ],
+        applyAction: "up",
+        expectedPositions: [
+          { tileId: 0, value: 16, row: 0, column: 2 },
+          { tileId: 2, value: 2, row: 3, column: 3 },
+        ],
+        settings: standard2048Settings,
+        exitLocations: [
+          {
+            side: "top",
+            index: 2,
+            requirements: { type: "greater-than-equal-to", value: 16 },
+          },
+        ],
+      },
+      {
+        title: "Tile exits bottom with equal requirement",
+        gridSize: { rows: 4, columns: 4 },
+        randomAvailablePosition: [0, 0],
+        prevTiles: [{ tileId: 0, value: 4, row: 2, column: 0 }],
+        applyAction: "down",
+        expectedPositions: [
+          { tileId: 0, value: 4, row: 4, column: 0 },
+          { tileId: 1, value: 2, row: 0, column: 0 },
+        ],
+        settings: standard2048Settings,
+        exitLocations: [
+          {
+            side: "bottom",
+            index: 0,
+            requirements: { type: "equal-to", value: 4 },
+          },
+        ],
+      },
+      {
+        title:
+          "Tile does not exit when a valid tile ends up next to the exit location but the action does not move it out",
+        gridSize: { rows: 4, columns: 4 },
+        randomAvailablePosition: [3, 3],
+        prevTiles: [
+          { tileId: 0, value: 8, row: 0, column: 2 },
+          { tileId: 1, value: 8, row: 0, column: 3 },
+        ],
+        applyAction: "left",
+        expectedPositions: [
+          { tileId: 0, value: 16, row: 0, column: 0 },
+          { tileId: 2, value: 2, row: 3, column: 3 },
+        ],
+        settings: standard2048Settings,
+        exitLocations: [
+          {
+            side: "top",
+            index: 0,
+            requirements: { type: "greater-than-equal-to", value: 16 },
+          },
+        ],
+      },
+      {
+        title:
+          "A valid exit tile sliding next to an exit location does not leave if the direction does not move it out",
+        gridSize: { rows: 4, columns: 4 },
+        randomAvailablePosition: [1, 2],
+        prevTiles: [
+          {
+            tileId: 0,
+            value: 2,
+            row: 3,
+            column: 0,
+          },
+          {
+            tileId: 1,
+            value: 1,
+            row: 3,
+            column: 1,
+          },
+        ],
+        applyAction: "right",
+        expectedPositions: [
+          {
+            tileId: 0,
+            value: 2,
+            row: 3,
+            column: 2,
+          },
+          {
+            tileId: 1,
+            value: 1,
+            row: 3,
+            column: 3,
+          },
+          {
+            tileId: 2,
+            value: 2,
+            row: 1,
+            column: 2,
+          },
+        ],
+        settings: standard2048Settings,
+        exitLocations: [
+          {
+            requirements: {
+              type: "greater-than-equal-to",
+              value: 2,
+            },
+            side: "bottom",
+            index: 2,
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 function stateFromTilePositions(
   positions: TilePosition[],
-  settings: Types.Settings
+  settings: Types.Settings,
+  exitLocations: Types.ExitLocation[] = []
 ): Types.GameState {
   const tiles: Types.Tile[] = [];
 
@@ -509,25 +666,8 @@ function stateFromTilePositions(
     score: 0,
     status: "user-turn",
     settings,
-    exitLocations: [],
+    exitLocations,
   };
-}
-
-function tilePositionsFromState(state: Types.GameState): TilePosition[] {
-  const positions: TilePosition[] = [];
-
-  state.tiles.forEach((tile) => {
-    const [row, column] = tile.position;
-
-    positions.push({
-      tileId: tile.id,
-      value: tile.value,
-      row,
-      column,
-    });
-  });
-
-  return positions.sort((a, b) => a.tileId - b.tileId);
 }
 
 describe("two048 game", () => {
@@ -544,6 +684,7 @@ describe("two048 game", () => {
           seed,
           gridSize,
           settings,
+          exitLocations,
         }) => {
           test(title, () => {
             (getRandomAvailablePosition as jest.Mock).mockImplementation(
@@ -552,7 +693,11 @@ describe("two048 game", () => {
 
             const rand = withRand(seed ?? "test");
 
-            const prevState = stateFromTilePositions(prevTiles, settings);
+            const prevState = stateFromTilePositions(
+              prevTiles,
+              settings,
+              exitLocations ?? []
+            );
 
             const nextState = two048.applyAction({
               state: prevState,
@@ -566,7 +711,7 @@ describe("two048 game", () => {
             }
 
             if (expectedPositions) {
-              const nextGrid = tilePositionsFromState(nextState);
+              const nextGrid = getTestPropsFromState(nextState).tiles;
 
               expect(nextGrid).toEqual(expectedPositions);
             }

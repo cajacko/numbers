@@ -1,6 +1,9 @@
 import * as GameTypes from "@/game/Game.types";
 import { defaultGame } from "@/game/games";
 import getGameStateDiffs from "@/game/utils/getGameStateDiffs";
+import getTestPropsFromState, {
+  TestProps,
+} from "@/game/utils/getTestPropsFromState";
 import useVibrate from "@/hooks/useVibrate";
 import withRand, { generateSeed } from "@/utils/withRand";
 import React from "react";
@@ -58,6 +61,7 @@ type GameContext = {
   score: SharedValue<number>;
   status: GameTypes.Status;
   exitLocations: GameTypes.ExitLocation[];
+  getTestProps: () => { current: TestProps; previous: TestProps | null };
 };
 
 const Context = React.createContext<GameContext | null>(null);
@@ -151,6 +155,14 @@ export function useExitLocations() {
   return React.useMemo(() => exitLocations ?? [], [exitLocations]);
 }
 
+export function useGetTestProps() {
+  const { getTestProps } = React.useContext(Context) ?? {};
+
+  return React.useCallback(() => {
+    return getTestProps?.() ?? { tiles: [] };
+  }, [getTestProps]);
+}
+
 function getCollapsingFromDirection(action: GameTypes.Action) {
   switch (action) {
     case "up":
@@ -189,6 +201,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
     })
   );
 
+  const prevStateRef = React.useRef<GameTypes.GameState | null>(null);
   const nextStateRef = React.useRef<GameTypes.GameState | null>(null);
 
   const score = useSharedValue<number>(currentStateRef.current.score);
@@ -278,6 +291,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
       nextStateRef.current = nextState;
 
       function postAction() {
+        prevStateRef.current = currentStateRef.current;
         currentStateRef.current = nextState;
         nextStateRef.current = null;
 
@@ -468,6 +482,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
   >(currentStateRef.current.exitLocations);
 
   const reset = React.useCallback<GameContext["reset"]>(() => {
+    prevStateRef.current = currentStateRef.current;
     currentStateRef.current = game.getInitState({
       gridSize: { columns, rows },
       rand,
@@ -494,6 +509,15 @@ export function GameProvider(props: { children: React.ReactNode }) {
     reset();
   }, [game, reset]);
 
+  const getTestProps = React.useCallback<GameContext["getTestProps"]>(() => {
+    return {
+      current: getTestPropsFromState(currentStateRef.current),
+      previous: prevStateRef.current
+        ? getTestPropsFromState(prevStateRef.current)
+        : null,
+    };
+  }, []);
+
   const value = React.useMemo<GameContext>(
     () => ({
       game,
@@ -510,6 +534,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
       status,
       setGame,
       exitLocations,
+      getTestProps,
     }),
     [
       game,
@@ -525,6 +550,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
       score,
       status,
       exitLocations,
+      getTestProps,
     ]
   );
 

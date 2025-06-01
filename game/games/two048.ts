@@ -87,7 +87,31 @@ const getInitState: Types.GetInitState = ({ rand, gridSize, settings }) => {
       {
         requirements: {
           type: "greater-than-equal-to",
-          value: 16,
+          value: 2,
+        },
+        side: "bottom",
+        index: 2,
+      },
+      {
+        requirements: {
+          type: "greater-than-equal-to",
+          value: 2,
+        },
+        side: "left",
+        index: 2,
+      },
+      {
+        requirements: {
+          type: "greater-than-equal-to",
+          value: 2,
+        },
+        side: "right",
+        index: 2,
+      },
+      {
+        requirements: {
+          type: "greater-than-equal-to",
+          value: 2,
         },
         side: "top",
         index: 2,
@@ -284,6 +308,89 @@ function slideTiles(
   return { tiles: newTiles, scoreIncrease, changed };
 }
 
+function requirementsMet(
+  value: Types.Value,
+  requirements: Types.ExitLocation["requirements"]
+): boolean {
+  if (value === null) return false;
+  switch (requirements.type) {
+    case "greater-than-equal-to":
+      return value >= requirements.value;
+    case "equal-to":
+      return value === requirements.value;
+    default:
+      return false;
+  }
+}
+
+const actionToExitLocationSide: Record<
+  Types.Action,
+  Types.ExitLocation["side"] | null
+> = {
+  up: "top",
+  down: "bottom",
+  left: "left",
+  right: "right",
+  tap: null,
+  tick: null,
+};
+
+function applyExitLocations(
+  state: Types.GameState,
+  gridSize: Types.GridSize,
+  action: Types.Action
+): { changed: boolean } {
+  let changed = false;
+
+  for (const exit of state.exitLocations) {
+    let row: number;
+    let col: number;
+    let newRow: number;
+    let newCol: number;
+
+    switch (exit.side) {
+      case "top":
+        row = 0;
+        col = exit.index;
+        newRow = -1;
+        newCol = col;
+        break;
+      case "bottom":
+        row = gridSize.rows - 1;
+        col = exit.index;
+        newRow = gridSize.rows;
+        newCol = col;
+        break;
+      case "left":
+        row = exit.index;
+        col = 0;
+        newRow = row;
+        newCol = -1;
+        break;
+      case "right":
+        row = exit.index;
+        col = gridSize.columns - 1;
+        newRow = row;
+        newCol = gridSize.columns;
+        break;
+    }
+
+    const tile = state.tiles.find(
+      (t) => t.position[0] === row && t.position[1] === col
+    );
+    if (
+      tile &&
+      !tile.mergedFrom &&
+      requirementsMet(tile.value, exit.requirements) &&
+      actionToExitLocationSide[action] === exit.side
+    ) {
+      if (moveTile(tile, newRow, newCol)) changed = true;
+    }
+  }
+
+  return { changed };
+}
+
 function spawnRandomTile(
   state: Types.GameState,
   gridSize: Types.GridSize,
@@ -395,7 +502,10 @@ const applyAction: Types.ApplyAction = ({ state, action, gridSize, rand }) => {
     score: state.score + scoreIncrease,
   };
 
-  nextState = spawnRandomTile(nextState, gridSize, rand, changed);
+  const exitResult = applyExitLocations(nextState, gridSize, action);
+  const overallChanged = changed || exitResult.changed;
+
+  nextState = spawnRandomTile(nextState, gridSize, rand, overallChanged);
   nextState = resolveEndState(nextState, gridSize);
 
   return nextState;
@@ -411,9 +521,9 @@ const gameConfig: Types.GameConfig = {
     columns: 4,
   },
   defaultSettings: {
-    zeroTiles: true,
+    zeroTiles: false,
     permZeroTileCount: 2,
-    randomFixedTiles: 1,
+    randomFixedTiles: 0,
     newTileValue: 1,
   },
 };

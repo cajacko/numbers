@@ -5,6 +5,7 @@ import {
   useGridSize,
   useSetGridSize,
   useSetGame,
+  useGetTestProps,
 } from "@/components/game/Game.context";
 import games from "@/game/games";
 import GridConnected from "@/components/game/grid/GridConnected";
@@ -15,6 +16,7 @@ import useGameController from "./hooks/useGameController";
 import Number from "@/components/game/Number";
 import { useSharedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import * as Clipboard from "expo-clipboard";
 
 export interface GameProps {}
 
@@ -28,6 +30,17 @@ function ConnectedGame(props: GameProps): React.ReactNode {
   const insets = useSafeAreaInsets();
   const { game, setGame } = useSetGame();
   const selectedGame = game?.name;
+  const getTestProps = useGetTestProps();
+
+  const copyTestProps = React.useCallback(async () => {
+    const testProps = getTestProps();
+
+    const string = JSON.stringify(testProps, null, 2);
+
+    console.log("Test Props:", string);
+
+    await Clipboard.setStringAsync(string);
+  }, [getTestProps]);
 
   const [size, setSize] = React.useState<{
     width: number;
@@ -129,6 +142,9 @@ function ConnectedGame(props: GameProps): React.ReactNode {
         />
 
         <View style={footerStyle}>
+          <View style={styles.reset}>
+            <Button title="Copy Test Props" onPress={copyTestProps} />
+          </View>
           <View style={styles.reset}>
             <Button title="Settings" onPress={openSettings} />
           </View>
