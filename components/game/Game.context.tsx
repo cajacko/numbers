@@ -202,6 +202,8 @@ export function GameProvider(props: { children: React.ReactNode }) {
         currentStateRef.current = nextState;
         nextStateRef.current = null;
 
+        setSettings(currentStateRef.current.settings);
+
         setAllToCurrentState();
 
         if (currentStateRef.current.status === "ai-turn") {
