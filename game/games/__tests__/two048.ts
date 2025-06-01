@@ -496,6 +496,7 @@ const descriptions: {
           { tileId: 0, value: 16, row: -1, column: 2 },
           { tileId: 1, value: 2, row: 3, column: 3 },
         ],
+        expectedStatus: "won",
         settings: standard2048Settings,
         exitLocations: [
           {
@@ -556,6 +557,7 @@ const descriptions: {
           { tileId: 0, value: 4, row: 4, column: 0 },
           { tileId: 1, value: 2, row: 0, column: 0 },
         ],
+        expectedStatus: "won",
         settings: standard2048Settings,
         exitLocations: [
           {
