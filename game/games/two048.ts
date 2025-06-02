@@ -518,7 +518,8 @@ function resolveEndState(
       initTiles: exitedTiles.map((tile, i) => ({
         ...tile,
         mergedFrom: null,
-        id: i,
+        // id: i, // NOTE: Keep the same ID, it's the same tile, so it makes sense. The animation
+        // layer should handle the transition
         position: exitedTileToNewTilePosition(tile, gridSize),
       })),
     });
