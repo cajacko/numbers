@@ -1,5 +1,6 @@
 import ExitLocation, {
   ExitLocationProps,
+  EXIT_LOCATION_OFFSET,
 } from "@/components/game/ExitLocation";
 import TileConnected from "@/components/game/tile/TileConnected";
 import * as GameTypes from "@/game/Game.types";
@@ -34,9 +35,11 @@ export default React.memo(function Grid({
   exitLocations,
 }: GridProps): React.ReactNode {
   const tileSize = React.useMemo((): number => {
+    const spacing = EXIT_LOCATION_OFFSET * 2;
+
     const size = Math.min(
-      availableHeight / rows,
-      availableWidth / columns,
+      (availableHeight - spacing) / rows,
+      (availableWidth - spacing) / columns,
       maxTileSize
     );
 
@@ -61,6 +64,12 @@ export default React.memo(function Grid({
         },
       ]),
     [tileSize, rows, columns]
+  );
+
+  const containerStyle = React.useMemo(
+    () =>
+      StyleSheet.flatten([styles.container, { padding: EXIT_LOCATION_OFFSET }]),
+    []
   );
 
   const rowStyle = React.useMemo(
@@ -114,7 +123,7 @@ export default React.memo(function Grid({
 
   return (
     <GestureDetector gesture={gesture}>
-      <View style={styles.container}>
+      <View style={containerStyle}>
         <View style={innerStyle}>
           {rowIds.map((rowId) => (
             <View key={rowId} style={rowStyle}>
@@ -135,6 +144,8 @@ export default React.memo(function Grid({
             type={requirements.type}
             value={requirements.value}
             tileSize={sizeSharedValue}
+            columns={columns}
+            rows={rows}
           />
         ))}
       </View>
