@@ -13,11 +13,13 @@ const getInitState = ({
   initSeed,
   level,
   initTiles,
+  score,
 }: {
   rand: Types.Rand;
   initSeed: string;
   level: number;
   initTiles?: Types.Tile[];
+  score?: number;
 }): Types.GameState => {
   const gridSize: Types.GridSize = { rows: 4, columns: 4 };
 
@@ -53,7 +55,7 @@ const getInitState = ({
 
   let nextState: Types.GameState = {
     tiles: initTiles ?? [],
-    score: 0,
+    score: score ?? 0,
     status: "user-turn",
     settings,
     level,
@@ -512,6 +514,7 @@ function resolveEndState(
       rand,
       initSeed: generateSeed(rand),
       level: state.level + 1,
+      score: state.score,
       initTiles: exitedTiles.map((tile, i) => ({
         ...tile,
         mergedFrom: null,
