@@ -12,10 +12,12 @@ const getInitState = ({
   rand,
   initSeed,
   level,
+  initTiles,
 }: {
   rand: Types.Rand;
   initSeed: string;
   level: number;
+  initTiles?: Types.Tile[];
 }): Types.GameState => {
   const gridSize: Types.GridSize = { rows: 4, columns: 4 };
 
@@ -50,7 +52,7 @@ const getInitState = ({
   };
 
   let nextState: Types.GameState = {
-    tiles: [],
+    tiles: initTiles ?? [],
     score: 0,
     status: "user-turn",
     settings,
@@ -459,6 +461,35 @@ function getGoalFromGridSize(gridSize: Types.GridSize): number {
   }
 }
 
+/**
+ * When a tile exits the grid, it should re-enter from the opposite side.
+ * For example, if a tile exits from the top, it should re-enter from the bottom. and be adjacent to
+ * the bottom edge and in the same column.
+ */
+function exitedTileToNewTilePosition(
+  tile: Types.Tile,
+  gridSize: Types.GridSize
+): Types.Position {
+  const [row, column] = tile.position;
+  const { rows, columns } = gridSize;
+
+  if (row < 0) {
+    // Exited from top
+    return [rows - 1, column];
+  } else if (row >= rows) {
+    // Exited from bottom
+    return [0, column];
+  } else if (column < 0) {
+    // Exited from left
+    return [row, columns - 1];
+  } else if (column >= columns) {
+    // Exited from right
+    return [row, 0];
+  }
+
+  throw new Error(`Tile at position ${tile.position} did not exit the grid.`);
+}
+
 function resolveEndState(
   state: Types.GameState,
   gridSize: Types.GridSize,
@@ -466,7 +497,7 @@ function resolveEndState(
 ): Types.GameState {
   const { rows, columns } = gridSize;
 
-  const tileExited = state.tiles.some(
+  const exitedTiles = state.tiles.filter(
     (t) =>
       t.position[0] < 0 ||
       t.position[0] >= rows ||
@@ -474,16 +505,28 @@ function resolveEndState(
       t.position[1] >= columns
   );
 
+  const tileExited = exitedTiles.length > 0;
+
+  function getNextLevel(): Types.GameState {
+    return getInitState({
+      rand,
+      initSeed: generateSeed(rand),
+      level: state.level + 1,
+      initTiles: exitedTiles.map((tile, i) => ({
+        ...tile,
+        mergedFrom: null,
+        id: i,
+        position: exitedTileToNewTilePosition(tile, gridSize),
+      })),
+    });
+  }
+
   if (tileExited) {
     if (state.level >= lastLevel) {
       return { ...state, status: "won" };
     }
 
-    return getInitState({
-      rand,
-      initSeed: generateSeed(rand),
-      level: state.level + 1,
-    });
+    return getNextLevel();
   }
 
   if (
@@ -495,11 +538,7 @@ function resolveEndState(
       return { ...state, status: "won" };
     }
 
-    return getInitState({
-      rand,
-      initSeed: generateSeed(rand),
-      level: state.level + 1,
-    });
+    return getNextLevel();
   }
 
   const available = getAvailablePositions({ gridSize, state });
