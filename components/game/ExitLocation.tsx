@@ -14,7 +14,7 @@ export interface ExitLocationProps {
   tileSize: SharedValue<number>;
 }
 
-const textHeightAllowance = 20;
+export const EXIT_LOCATION_OFFSET = 20;
 
 export default function ExitLocation({
   index,
@@ -27,13 +27,13 @@ export default function ExitLocation({
   const animatedStyle = useAnimatedStyle(() => {
     const width =
       side === "left" || side === "right"
-        ? textHeightAllowance
+        ? EXIT_LOCATION_OFFSET
         : tileSize.value;
 
     const height =
       side === "left" || side === "right"
         ? tileSize.value
-        : textHeightAllowance;
+        : EXIT_LOCATION_OFFSET;
 
     const offset = index * tileSize.value;
 
@@ -41,16 +41,16 @@ export default function ExitLocation({
 
     switch (side) {
       case "top":
-        positionStyle = { top: -textHeightAllowance, left: offset };
+        positionStyle = { top: -EXIT_LOCATION_OFFSET, left: offset };
         break;
       case "bottom":
-        positionStyle = { bottom: -textHeightAllowance, left: offset };
+        positionStyle = { bottom: -EXIT_LOCATION_OFFSET, left: offset };
         break;
       case "left":
-        positionStyle = { left: -textHeightAllowance, top: offset };
+        positionStyle = { left: -EXIT_LOCATION_OFFSET, top: offset };
         break;
       case "right":
-        positionStyle = { right: -textHeightAllowance, top: offset };
+        positionStyle = { right: -EXIT_LOCATION_OFFSET, top: offset };
         break;
     }
 
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   text: {
-    fontSize: Math.min(16, textHeightAllowance),
+    fontSize: Math.min(16, EXIT_LOCATION_OFFSET),
     color: "white",
     textAlign: "center",
     fontWeight: "bold",
