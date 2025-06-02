@@ -149,6 +149,8 @@ export function GameProvider(props: { children: React.ReactNode }) {
 
   const setAllToCurrentState = React.useCallback(() => {
     setStatus(currentStateRef.current.status);
+    setSettings(currentStateRef.current.settings);
+    setLevel(currentStateRef.current.level);
     score.value = currentStateRef.current.score;
 
     Object.entries(callbacks.current).forEach(([tileIdString, callback]) => {
@@ -201,8 +203,6 @@ export function GameProvider(props: { children: React.ReactNode }) {
         prevStateRef.current = currentStateRef.current;
         currentStateRef.current = nextState;
         nextStateRef.current = null;
-
-        setSettings(currentStateRef.current.settings);
 
         setAllToCurrentState();
 

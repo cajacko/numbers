@@ -68,10 +68,7 @@ export default React.memo(function Grid({
 
   const containerStyle = React.useMemo(
     () =>
-      StyleSheet.flatten([
-        styles.container,
-        { padding: EXIT_LOCATION_OFFSET },
-      ]),
+      StyleSheet.flatten([styles.container, { padding: EXIT_LOCATION_OFFSET }]),
     []
   );
 
@@ -147,6 +144,8 @@ export default React.memo(function Grid({
             type={requirements.type}
             value={requirements.value}
             tileSize={sizeSharedValue}
+            columns={columns}
+            rows={rows}
           />
         ))}
       </View>

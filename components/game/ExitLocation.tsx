@@ -12,6 +12,8 @@ export interface ExitLocationProps {
   index: number;
   style?: StyleProp<ViewStyle>;
   tileSize: SharedValue<number>;
+  columns: number;
+  rows: number;
 }
 
 export const EXIT_LOCATION_OFFSET = 20;
@@ -23,6 +25,8 @@ export default function ExitLocation({
   type,
   value,
   style,
+  columns,
+  rows,
 }: ExitLocationProps): React.ReactNode {
   const animatedStyle = useAnimatedStyle(() => {
     const width =
@@ -41,16 +45,22 @@ export default function ExitLocation({
 
     switch (side) {
       case "top":
-        positionStyle = { top: -EXIT_LOCATION_OFFSET, left: offset };
+        positionStyle = { left: offset + EXIT_LOCATION_OFFSET, top: 0 };
         break;
       case "bottom":
-        positionStyle = { bottom: -EXIT_LOCATION_OFFSET, left: offset };
+        positionStyle = {
+          left: offset + EXIT_LOCATION_OFFSET,
+          top: rows * tileSize.value + EXIT_LOCATION_OFFSET,
+        };
         break;
       case "left":
-        positionStyle = { left: -EXIT_LOCATION_OFFSET, top: offset };
+        positionStyle = { left: 0, top: offset + EXIT_LOCATION_OFFSET };
         break;
       case "right":
-        positionStyle = { right: -EXIT_LOCATION_OFFSET, top: offset };
+        positionStyle = {
+          left: rows * tileSize.value + EXIT_LOCATION_OFFSET,
+          top: offset + EXIT_LOCATION_OFFSET,
+        };
         break;
     }
 
