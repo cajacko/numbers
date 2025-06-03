@@ -1,14 +1,10 @@
 import * as Types from "@/game/Game.types";
+import getLevelSettings from "./getLevelSettings";
 
-export type GetAvailablePositionsProps = {
-  gridSize: Types.GridSize;
-  state: Types.GameState;
-};
-
-export default function getAvailablePositions({
-  gridSize,
-  state,
-}: GetAvailablePositionsProps): Types.Position[] {
+export default function getAvailablePositions(
+  state: Types.GameState
+): Types.Position[] {
+  const gridSize = getLevelSettings(state).gridSize;
   const occupiedPositionsMap: { [row: number]: { [column: number]: true } } =
     {};
 

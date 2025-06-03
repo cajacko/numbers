@@ -2,79 +2,133 @@ import * as Types from "@/game/Game.types";
 import spawnTile from "@/game/utils/spawnTile";
 import createPositionMap from "@/game/utils/createPositionMap";
 import getAvailablePositions from "@/game/utils/getAvailablePositions";
-import withRand, { generateSeed } from "@/utils/withRand";
+import withRand from "@/utils/withRand";
+import getLevelSettings from "@/game/utils/getLevelSettings";
 
 const sides: Types.ExitLocation["side"][] = ["top", "bottom", "left", "right"];
-const levelExitValues = [16, 32, 64, 128, 256];
-const lastLevel = levelExitValues.length;
+const defaultNewTileValue = 1;
 
-const getInitState = ({
-  rand,
-  initSeed,
-  level,
-  initTiles,
-  score,
-}: {
-  rand: Types.Rand;
-  initSeed: string;
-  level: number;
-  initTiles?: Types.Tile[];
-  score?: number;
-}): Types.GameState => {
-  const gridSize: Types.GridSize = { rows: 4, columns: 4 };
-
+function generateExitLocations(
+  rand: Types.Rand,
+  gridSize: Types.GridSize,
+  value: number
+): Types.Goal[] {
   const side = rand(sides);
 
   const maxIndex =
     side === "top" || side === "bottom"
       ? gridSize.columns - 1
       : gridSize.rows - 1;
+
   const index = Math.floor(rand() * maxIndex);
 
-  const settings: Types.Settings = {
-    gridSize,
-    zeroTiles: level > 1,
-    permZeroTileCount: level > 2 ? 2 : 1,
-    randomFixedTiles: level > 3 ? level - 3 : null, // Add fixed tiles from level 4 onwards
-    newTileValue: 1,
-    goals: [
-      {
-        type: "exit-location",
-        payload: {
-          side,
-          index,
-          requirements: {
-            type: "greater-than-equal-to",
-            value: levelExitValues[level - 1],
-          },
+  return [
+    {
+      type: "exit-location",
+      payload: {
+        side,
+        index,
+        requirements: {
+          type: "greater-than-equal-to",
+          value,
         },
       },
-    ],
-    seed: initSeed,
+    },
+  ];
+}
+
+function getLevels(rand: Types.Rand): Types.Settings[] {
+  return [
+    {
+      goals: generateExitLocations(rand, { rows: 4, columns: 4 }, 16),
+      gridSize: { rows: 4, columns: 4 },
+    },
+    {
+      goals: generateExitLocations(rand, { rows: 4, columns: 4 }, 32),
+      gridSize: { rows: 4, columns: 4 },
+      permZeroTileCount: 1,
+    },
+    {
+      goals: generateExitLocations(rand, { rows: 4, columns: 4 }, 64),
+      gridSize: { rows: 4, columns: 4 },
+      permZeroTileCount: 2,
+    },
+    {
+      goals: generateExitLocations(rand, { rows: 4, columns: 4 }, 128),
+      gridSize: { rows: 4, columns: 4 },
+      randomFixedTiles: 1,
+    },
+    {
+      goals: generateExitLocations(rand, { rows: 4, columns: 4 }, 256),
+      gridSize: { rows: 5, columns: 4 },
+      randomFixedTiles: 2,
+    },
+    {
+      goals: generateExitLocations(rand, { rows: 4, columns: 4 }, 512),
+      gridSize: { rows: 5, columns: 4 },
+      permZeroTileCount: 0,
+      randomFixedTiles: 1,
+    },
+    {
+      goals: generateExitLocations(rand, { rows: 4, columns: 4 }, 1024),
+      gridSize: { rows: 5, columns: 4 },
+      permZeroTileCount: 2,
+      randomFixedTiles: 1,
+    },
+    {
+      goals: generateExitLocations(rand, { rows: 4, columns: 4 }, 2048),
+      gridSize: { rows: 6, columns: 4 },
+      permZeroTileCount: 2,
+      randomFixedTiles: 2,
+    },
+  ];
+}
+
+function resolveNewLevel({
+  exitedTiles,
+  rand,
+  state,
+  level,
+}: {
+  state: Types.GameState;
+  rand: Types.Rand;
+  exitedTiles: Types.Tile[];
+  level: number;
+}): Types.GameState {
+  let nextState: Types.GameState = {
+    seed: state.seed,
+    tiles: [],
+    score: state.score,
+    status: "user-turn",
+    level,
+    levelSettings: state.levelSettings,
+    turn: 1,
   };
 
-  let nextState: Types.GameState = {
-    tiles: initTiles ?? [],
-    score: score ?? 0,
-    status: "user-turn",
-    settings,
-    level,
-  };
+  const settings = getLevelSettings(nextState);
+
+  const tiles = exitedTiles.map((tile, i) => ({
+    ...tile,
+    mergedFrom: null,
+    // id: i, // NOTE: Keep the same ID, it's the same tile, so it makes sense. The animation
+    // layer should handle the transition
+    position: exitedTileToNewTilePosition(tile, settings.gridSize),
+  }));
+
+  nextState.tiles = tiles;
 
   if (settings.randomFixedTiles) {
     nextState = spawnTiles({
       state: nextState,
-      gridSize: settings.gridSize,
       rand,
       count: settings.randomFixedTiles,
       value: null,
     });
   }
 
-  if (settings.zeroTiles) {
+  if (settings.permZeroTileCount) {
     nextState = spawnTiles({
       state: nextState,
-      gridSize: settings.gridSize,
       rand,
       count: settings.permZeroTileCount,
       value: 0,
@@ -83,13 +137,39 @@ const getInitState = ({
 
   nextState = spawnTiles({
     state: nextState,
-    gridSize: settings.gridSize,
     rand,
     count: 2,
-    value: settings.newTileValue,
+    value: settings.newTileValue ?? defaultNewTileValue,
   });
 
   return nextState;
+}
+
+const getInitState = ({
+  rand,
+  seed,
+}: {
+  rand: Types.Rand;
+  seed: string;
+}): Types.GameState => {
+  const levelSettings = getLevels(rand);
+
+  let nextState: Types.GameState = {
+    tiles: [],
+    score: 0,
+    status: "user-turn",
+    levelSettings,
+    level: 1,
+    seed,
+    turn: 1,
+  };
+
+  return resolveNewLevel({
+    state: nextState,
+    rand,
+    exitedTiles: [],
+    level: 1,
+  });
 };
 
 const supportedActions: Types.Action[] = ["up", "down", "left", "right"];
@@ -134,13 +214,11 @@ export function getColorsFromValue(value: Types.Value): {
 
 function spawnTiles({
   state,
-  gridSize,
   rand,
   count,
   value,
 }: {
   state: Types.GameState;
-  gridSize: Types.GridSize;
   rand: Types.Rand;
   count: number;
   value: Types.Value;
@@ -149,7 +227,6 @@ function spawnTiles({
 
   for (let i = 0; i < count; i++) {
     nextState = spawnTile({
-      gridSize,
       rand,
       state: nextState,
       tile: {
@@ -349,7 +426,6 @@ const actionToExitLocationSide: Record<
   right: "right",
   tap: null,
   tick: null,
-  init: null,
 };
 
 function applyExitLocations(
@@ -359,7 +435,9 @@ function applyExitLocations(
 ): { changed: boolean } {
   let changed = false;
 
-  for (const exit of state.settings.goals) {
+  const goals = getLevelSettings(state).goals;
+
+  for (const exit of goals) {
     if (exit.type !== "exit-location") continue;
 
     let row: number;
@@ -412,7 +490,6 @@ function applyExitLocations(
 
 function spawnRandomTile(
   state: Types.GameState,
-  gridSize: Types.GridSize,
   rand: Types.Rand,
   changed: boolean
 ): Types.GameState {
@@ -422,21 +499,19 @@ function spawnRandomTile(
 
   const zeroCount = state.tiles.filter((t) => t.value === 0).length;
 
+  const settings = getLevelSettings(state);
+
   let value: number | null;
 
-  if (
-    nextState.settings.zeroTiles &&
-    zeroCount < nextState.settings.permZeroTileCount
-  ) {
+  if (settings.permZeroTileCount && zeroCount < settings.permZeroTileCount) {
     value = 0;
   } else {
-    value = nextState.settings.newTileValue;
+    value = settings.newTileValue ?? defaultNewTileValue;
   }
 
   nextState =
     spawnTile({
       state,
-      gridSize,
       rand,
       tile: { value, ...getColorsFromValue(value) },
     }) ?? nextState;
@@ -494,10 +569,12 @@ function exitedTileToNewTilePosition(
 
 function resolveEndState(
   state: Types.GameState,
-  gridSize: Types.GridSize,
   rand: Types.Rand
 ): Types.GameState {
-  const { rows, columns } = gridSize;
+  const settings = getLevelSettings(state);
+
+  const { rows, columns } = settings.gridSize;
+  const lastLevel = state.levelSettings.length;
 
   const exitedTiles = state.tiles.filter(
     (t) =>
@@ -509,43 +586,38 @@ function resolveEndState(
 
   const tileExited = exitedTiles.length > 0;
 
-  function getNextLevel(): Types.GameState {
-    return getInitState({
-      rand,
-      initSeed: generateSeed(rand),
-      level: state.level + 1,
-      score: state.score,
-      initTiles: exitedTiles.map((tile, i) => ({
-        ...tile,
-        mergedFrom: null,
-        // id: i, // NOTE: Keep the same ID, it's the same tile, so it makes sense. The animation
-        // layer should handle the transition
-        position: exitedTileToNewTilePosition(tile, gridSize),
-      })),
-    });
-  }
-
   if (tileExited) {
     if (state.level >= lastLevel) {
       return { ...state, status: "won" };
     }
 
-    return getNextLevel();
+    return resolveNewLevel({
+      state,
+      rand,
+      exitedTiles,
+      level: state.level + 1,
+    });
   }
 
   if (
     state.tiles.some(
-      (t) => t.value !== null && t.value >= getGoalFromGridSize(gridSize)
+      (t) =>
+        t.value !== null && t.value >= getGoalFromGridSize(settings.gridSize)
     )
   ) {
     if (state.level >= lastLevel) {
       return { ...state, status: "won" };
     }
 
-    return getNextLevel();
+    return resolveNewLevel({
+      state,
+      rand,
+      exitedTiles,
+      level: state.level + 1,
+    });
   }
 
-  const available = getAvailablePositions({ gridSize, state });
+  const available = getAvailablePositions(state);
 
   if (available.length === 0) {
     const map = createPositionMap(state.tiles);
@@ -575,33 +647,45 @@ function resolveEndState(
   return state;
 }
 
-const applyAction: Types.ApplyAction = ({ state, action, initSeed }) => {
-  if (!state || action === "init") {
-    const rand = withRand(initSeed);
+function resolveTurn(
+  state: Types.GameState,
+  changed: boolean
+): Types.GameState {
+  if (!changed) return state;
+
+  const nextTurn = state.turn + 1;
+
+  return {
+    ...state,
+    turn: nextTurn,
+  };
+}
+
+const applyAction: Types.ApplyAction = (props) => {
+  if (!props.action) {
+    const rand = withRand(props.seed);
 
     return getInitState({
       rand,
-      initSeed,
-      level: 1,
+      seed: props.seed,
     });
   }
+
+  const { state, action } = props;
 
   if (!supportedActions.includes(action)) {
     return state;
   }
 
-  const rand = withRand(state.settings.seed);
-  const nextSeed = generateSeed(rand);
+  const settings = getLevelSettings(state);
+
+  const rand = withRand(`${state.seed}-${state.turn}`);
 
   let nextState: Types.GameState = {
     ...state,
-    settings: {
-      ...state.settings,
-      seed: nextSeed,
-    },
   };
 
-  const gridSize: Types.GridSize = nextState.settings.gridSize;
+  const gridSize: Types.GridSize = settings.gridSize;
 
   const { tiles, scoreIncrease, changed } = slideTiles(
     nextState.tiles,
@@ -618,8 +702,9 @@ const applyAction: Types.ApplyAction = ({ state, action, initSeed }) => {
   const exitResult = applyExitLocations(nextState, gridSize, action);
   const overallChanged = changed || exitResult.changed;
 
-  nextState = spawnRandomTile(nextState, gridSize, rand, overallChanged);
-  nextState = resolveEndState(nextState, gridSize, rand);
+  nextState = spawnRandomTile(nextState, rand, overallChanged);
+  nextState = resolveEndState(nextState, rand);
+  nextState = resolveTurn(nextState, overallChanged);
 
   return nextState;
 };

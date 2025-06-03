@@ -1,17 +1,16 @@
 import * as Types from "@/game/Game.types";
-import getAvailablePositions, {
-  GetAvailablePositionsProps,
-} from "./getAvailablePositions";
+import getAvailablePositions from "./getAvailablePositions";
 
-export type GetRandomAvailablePositionProps = GetAvailablePositionsProps & {
+export type GetRandomAvailablePositionProps = {
+  state: Types.GameState;
   rand: Types.Rand;
 };
 
 export default function getRandomAvailablePosition({
   rand,
-  ...props
+  state,
 }: GetRandomAvailablePositionProps): Types.Position | null {
-  const availablePositions = getAvailablePositions(props);
+  const availablePositions = getAvailablePositions(state);
 
   if (availablePositions.length === 0) {
     return null;

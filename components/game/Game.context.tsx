@@ -13,6 +13,7 @@ import {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
+import getLevelSettings from "@/game/utils/getLevelSettings";
 
 const duration = 300;
 const pendingDuration = duration / 2;
@@ -97,14 +98,13 @@ export function GameProvider(props: { children: React.ReactNode }) {
 
   const currentStateRef = React.useRef(
     game.applyAction({
-      state: null,
-      action: "init",
-      initSeed: generateSeed(),
+      action: null,
+      seed: generateSeed(),
     })
   );
 
   const [settings, setSettings] = React.useState<GameTypes.Settings>(
-    currentStateRef.current.settings
+    getLevelSettings(currentStateRef.current)
   );
 
   const prevStateRef = React.useRef<GameTypes.GameState | null>(null);
@@ -149,7 +149,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
 
   const setAllToCurrentState = React.useCallback(() => {
     setStatus(currentStateRef.current.status);
-    setSettings(currentStateRef.current.settings);
+    setSettings(getLevelSettings(currentStateRef.current));
     setLevel(currentStateRef.current.level);
     score.value = currentStateRef.current.score;
 
@@ -194,7 +194,6 @@ export function GameProvider(props: { children: React.ReactNode }) {
       const nextState = game.applyAction({
         action,
         state: currentStateRef.current,
-        initSeed: generateSeed(),
       });
 
       nextStateRef.current = nextState;
@@ -380,13 +379,12 @@ export function GameProvider(props: { children: React.ReactNode }) {
     prevStateRef.current = currentStateRef.current;
 
     currentStateRef.current = game.applyAction({
-      action: "init",
-      state: null,
-      initSeed: generateSeed(),
+      action: null,
+      seed: generateSeed(),
     });
 
     setLevel(currentStateRef.current.level);
-    setSettings(currentStateRef.current.settings);
+    setSettings(getLevelSettings(currentStateRef.current));
     setStatus(currentStateRef.current.status);
     score.value = currentStateRef.current.score;
 

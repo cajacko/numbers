@@ -15,7 +15,7 @@ export type Tile = {
 
 export type Status = "user-turn" | "ai-turn" | "won" | "lost";
 
-export type Action = "up" | "down" | "left" | "right" | "tap" | "tick" | "init";
+export type Action = "up" | "down" | "left" | "right" | "tap" | "tick";
 
 export type GridSize = {
   rows: number;
@@ -45,12 +45,11 @@ export type Goal =
 
 export type Settings = {
   gridSize: GridSize;
-  zeroTiles: boolean;
-  permZeroTileCount: number;
-  randomFixedTiles: number | null;
-  newTileValue: number;
+  permZeroTileCount?: number | null;
+  randomFixedTiles?: number | null;
+  newTileValue?: number;
   goals: Goal[];
-  seed: string;
+  initTiles?: Tile[] | null;
 };
 
 export type GameState = {
@@ -58,17 +57,22 @@ export type GameState = {
   score: number;
   status: Status;
   level: number;
-  settings: Settings;
+  turn: number;
+  seed: string;
+  levelSettings: Settings[];
 };
 
-export type ApplyAction = (props: {
-  /**
-   * null if the game is not initialized yet.
-   */
-  state: GameState | null;
-  action: Action;
-  initSeed: string; // Only used for the first null action
-}) => GameState;
+export type ApplyAction = (
+  props:
+    | {
+        /**
+         * null if the game is not initialized yet.
+         */
+        state: GameState;
+        action: Action;
+      }
+    | { action: null; seed: string }
+) => GameState;
 
 export type GameConfig = {
   supportedActions: Action[];
