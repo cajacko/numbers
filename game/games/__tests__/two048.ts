@@ -1,4 +1,5 @@
-import two048, { getColorsFromValue } from "../two048";
+import two048 from "../two048";
+import getColorsFromValue from "../../utils/getColorsFromValue";
 import * as Types from "@/game/Game.types";
 import getTestPropsFromState, {
   TilePosition,

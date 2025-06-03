@@ -1,0 +1,64 @@
+import * as Types from "@/game/Game.types";
+import getLevelSettings from "./getLevelSettings";
+import spawnTiles from "./spawnTiles";
+import exitedTileToNewTilePosition from "./exitedTileToNewTilePosition";
+import { DEFAULT_NEW_TILE_VALUE } from "./two048Constants";
+
+export default function resolveNewLevel({
+  exitedTiles,
+  rand,
+  state,
+  level,
+}: {
+  state: Types.GameState;
+  rand: Types.Rand;
+  exitedTiles: Types.Tile[];
+  level: number;
+}): Types.GameState {
+  let nextState: Types.GameState = {
+    seed: state.seed,
+    tiles: [],
+    score: state.score,
+    status: "user-turn",
+    level,
+    levelSettings: state.levelSettings,
+    turn: 1,
+  };
+
+  const settings = getLevelSettings(nextState);
+
+  const tiles = exitedTiles.map((tile) => ({
+    ...tile,
+    mergedFrom: null,
+    position: exitedTileToNewTilePosition(tile, settings.gridSize),
+  }));
+
+  nextState.tiles = tiles;
+
+  if (settings.randomFixedTiles) {
+    nextState = spawnTiles({
+      state: nextState,
+      rand,
+      count: settings.randomFixedTiles,
+      value: null,
+    });
+  }
+
+  if (settings.permZeroTileCount) {
+    nextState = spawnTiles({
+      state: nextState,
+      rand,
+      count: settings.permZeroTileCount,
+      value: 0,
+    });
+  }
+
+  nextState = spawnTiles({
+    state: nextState,
+    rand,
+    count: 2,
+    value: settings.newTileValue ?? DEFAULT_NEW_TILE_VALUE,
+  });
+
+  return nextState;
+}
