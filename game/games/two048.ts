@@ -679,7 +679,7 @@ const applyAction: Types.ApplyAction = (props) => {
 
   const settings = getLevelSettings(state);
 
-  const rand = withRand(`${state.seed}-${state.turn}`);
+  const rand = withRand(`${state.seed}-${state.level}-${state.turn}`);
 
   let nextState: Types.GameState = {
     ...state,
