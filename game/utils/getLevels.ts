@@ -30,7 +30,7 @@ export default function getLevels(rand: Types.Rand): Types.Settings[] {
     {
       goals: generateExitLocations(rand, { rows: 4, columns: 4 }, 512),
       gridSize: { rows: 5, columns: 4 },
-      permZeroTileCount: 0,
+      permZeroTileCount: 1,
       randomFixedTiles: 1,
     },
     {
