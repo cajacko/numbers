@@ -14,10 +14,8 @@ import getRandomAvailablePosition from "../../utils/getRandomAvailablePosition";
 
 const standard2048Settings: Types.Settings = {
   newTileValue: 2,
-  zeroTiles: false,
   permZeroTileCount: 0,
   randomFixedTiles: null,
-  seed: "123",
   gridSize: { rows: 4, columns: 4 },
   goals: [
     {
@@ -672,8 +670,10 @@ function stateFromTilePositions(
     tiles: tiles.sort((a, b) => a.id - b.id),
     score: 0,
     status: "user-turn",
-    settings,
     level: 1,
+    turn: 1,
+    seed: "123",
+    levelSettings: [settings],
   };
 }
 
@@ -714,7 +714,6 @@ describe("two048 game", () => {
             const nextState = two048.applyAction({
               state: prevState,
               action: applyAction,
-              initSeed: "123",
             });
 
             if (expectedStatus) {

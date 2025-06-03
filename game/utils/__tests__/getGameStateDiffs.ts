@@ -3,13 +3,23 @@ import * as Types from "@/game/Game.types";
 
 const settings: Types.Settings = {
   newTileValue: 2,
-  zeroTiles: false,
   permZeroTileCount: 0,
   randomFixedTiles: null,
   goals: [],
   gridSize: { rows: 4, columns: 4 },
-  seed: "123",
 };
+
+function createState(tiles: Types.Tile[]): Types.GameState {
+  return {
+    tiles,
+    score: 0,
+    status: "user-turn",
+    level: 1,
+    turn: 1,
+    seed: "123",
+    levelSettings: [settings],
+  };
+}
 
 function createTile(
   id: number,
@@ -29,21 +39,9 @@ function createTile(
 
 describe("getGameStateDiffs", () => {
   test("detects spawned tile", () => {
-    const prev: Types.GameState = {
-      tiles: [],
-      score: 0,
-      status: "user-turn",
-      settings,
-      level: 1,
-    };
+    const prev = createState([]);
     const tile = createTile(0, 0, 0, 2);
-    const next: Types.GameState = {
-      tiles: [tile],
-      score: 0,
-      status: "user-turn",
-      settings,
-      level: 1,
-    };
+    const next = createState([tile]);
 
     const diffs = getGameStateDiffs(prev, next);
 
@@ -63,21 +61,9 @@ describe("getGameStateDiffs", () => {
 
   test("detects moved tile", () => {
     const prevTile = createTile(0, 0, 0, 2);
-    const prev: Types.GameState = {
-      tiles: [prevTile],
-      score: 0,
-      status: "user-turn",
-      settings,
-      level: 1,
-    };
+    const prev = createState([prevTile]);
     const movedTile = { ...prevTile, position: [0, 1] as Types.Position };
-    const next: Types.GameState = {
-      tiles: [movedTile],
-      score: 0,
-      status: "user-turn",
-      settings,
-      level: 1,
-    };
+    const next = createState([movedTile]);
 
     const diffs = getGameStateDiffs(prev, next);
 
@@ -96,13 +82,7 @@ describe("getGameStateDiffs", () => {
   test("detects merged tile", () => {
     const tileA = createTile(0, 0, 0, 2);
     const tileB = createTile(1, 0, 1, 2);
-    const prev: Types.GameState = {
-      tiles: [tileA, tileB],
-      score: 0,
-      status: "user-turn",
-      settings,
-      level: 1,
-    };
+    const prev = createState([tileA, tileB]);
     const mergedTile: Types.Tile = {
       ...tileA,
       position: [0, 1],
@@ -111,13 +91,7 @@ describe("getGameStateDiffs", () => {
       backgroundColor: "bg-4",
       textColor: "text-4",
     };
-    const next: Types.GameState = {
-      tiles: [mergedTile],
-      score: 0,
-      status: "user-turn",
-      settings,
-      level: 1,
-    };
+    const next = createState([mergedTile]);
 
     const diffs = getGameStateDiffs(prev, next);
 
@@ -147,21 +121,9 @@ describe("getGameStateDiffs", () => {
   test("detects removed tile (not merged)", () => {
     const tileA = createTile(0, 0, 0, 2);
     const tileB = createTile(1, 0, 1, 2);
-    const prev: Types.GameState = {
-      tiles: [tileA, tileB],
-      score: 0,
-      status: "user-turn",
-      settings,
-      level: 1,
-    };
+    const prev = createState([tileA, tileB]);
     // tileB is removed, tileA remains unchanged
-    const next: Types.GameState = {
-      tiles: [tileA],
-      score: 0,
-      status: "user-turn",
-      settings,
-      level: 1,
-    };
+    const next = createState([tileA]);
 
     const diffs = getGameStateDiffs(prev, next);
 
@@ -178,13 +140,7 @@ describe("getGameStateDiffs", () => {
   test("does not return remove diff for merged tiles (only merge diff)", () => {
     const tileA = createTile(0, 0, 0, 2);
     const tileB = createTile(1, 0, 1, 2);
-    const prev: Types.GameState = {
-      tiles: [tileA, tileB],
-      score: 0,
-      status: "user-turn",
-      settings,
-      level: 1,
-    };
+    const prev = createState([tileA, tileB]);
     const mergedTile: Types.Tile = {
       ...tileA,
       position: [0, 1],
@@ -193,13 +149,7 @@ describe("getGameStateDiffs", () => {
       backgroundColor: "bg-4",
       textColor: "text-4",
     };
-    const next: Types.GameState = {
-      tiles: [mergedTile],
-      score: 0,
-      status: "user-turn",
-      settings,
-      level: 1,
-    };
+    const next = createState([mergedTile]);
 
     const diffs = getGameStateDiffs(prev, next);
 
@@ -215,22 +165,10 @@ describe("getGameStateDiffs", () => {
 
   test("detects value change (no move, no merge)", () => {
     const prevTile = createTile(0, 0, 0, 2);
-    const prev: Types.GameState = {
-      tiles: [prevTile],
-      score: 0,
-      status: "user-turn",
-      settings,
-      level: 1,
-    };
+    const prev = createState([prevTile]);
     // Only the value changes, position and id stay the same, no merge
     const changedTile = { ...prevTile, value: 4 };
-    const next: Types.GameState = {
-      tiles: [changedTile],
-      score: 0,
-      status: "user-turn",
-      settings,
-      level: 1,
-    };
+    const next = createState([changedTile]);
 
     const diffs = getGameStateDiffs(prev, next);
 
@@ -250,13 +188,7 @@ describe("getGameStateDiffs", () => {
   test("does not return value-change if value changed due to merge", () => {
     const tileA = createTile(0, 0, 0, 2);
     const tileB = createTile(1, 0, 1, 2);
-    const prev: Types.GameState = {
-      tiles: [tileA, tileB],
-      score: 0,
-      status: "user-turn",
-      settings,
-      level: 1,
-    };
+    const prev = createState([tileA, tileB]);
     const mergedTile: Types.Tile = {
       ...tileA,
       position: [0, 1],
@@ -265,13 +197,7 @@ describe("getGameStateDiffs", () => {
       backgroundColor: "bg-4",
       textColor: "text-4",
     };
-    const next: Types.GameState = {
-      tiles: [mergedTile],
-      score: 0,
-      status: "user-turn",
-      settings,
-      level: 1,
-    };
+    const next = createState([mergedTile]);
 
     const diffs = getGameStateDiffs(prev, next);
 
@@ -300,20 +226,8 @@ describe("getGameStateDiffs", () => {
       position: [0, 1], // moved
       // mergedFrom is the same as before
     };
-    const prev: Types.GameState = {
-      tiles: [prevTile],
-      score: 0,
-      status: "user-turn",
-      settings,
-      level: 1,
-    };
-    const next: Types.GameState = {
-      tiles: [nextTile],
-      score: 0,
-      status: "user-turn",
-      settings,
-      level: 1,
-    };
+    const prev = createState([prevTile]);
+    const next = createState([nextTile]);
 
     const diffs = getGameStateDiffs(prev, next);
 
