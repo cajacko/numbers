@@ -18,6 +18,7 @@ function createState(tiles: Types.Tile[]): Types.GameState {
     turn: 1,
     seed: "123",
     levelSettings: [settings],
+    overlayTiles: [],
   };
 }
 

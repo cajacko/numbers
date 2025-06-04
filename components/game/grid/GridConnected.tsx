@@ -22,11 +22,14 @@ export default React.memo(function GridConnected(
     );
   }, [rows, columns]);
 
+  const overlayTileIds = tileIds;
+
   return (
     <Grid
       columns={columns}
       rows={rows}
       tileIds={tileIds}
+      overlayTileIds={overlayTileIds}
       exitLocations={exitLocations}
       {...props}
     />

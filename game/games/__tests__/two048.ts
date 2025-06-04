@@ -5,13 +5,13 @@ import getTestPropsFromState, {
   TilePosition,
 } from "@/game/utils/getTestPropsFromState";
 
-jest.mock("../../utils/getRandomAvailablePosition", () => ({
+jest.mock("../../utils/positions/getRandomAvailablePosition", () => ({
   __esModule: true,
   default: jest.fn(),
 }));
 
 // eslint-disable-next-line import/first
-import getRandomAvailablePosition from "../../utils/getRandomAvailablePosition";
+import getRandomAvailablePosition from "../../utils/positions/getRandomAvailablePosition";
 
 const standard2048Settings: Types.Settings = {
   newTileValue: 2,
@@ -675,6 +675,7 @@ function stateFromTilePositions(
     turn: 1,
     seed: "123",
     levelSettings: [settings],
+    overlayTiles: [],
   };
 }
 

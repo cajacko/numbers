@@ -5,4 +5,5 @@ export {
   TileAnimatingState,
   TileSubscriber,
   GameContext,
+  OverlayTileState,
 } from "./context";

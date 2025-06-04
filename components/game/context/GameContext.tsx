@@ -10,6 +10,11 @@ export type TileState = {
   backgroundColor: string;
 };
 
+export type OverlayTileState = {
+  position: GameTypes.Position;
+  icons: GameTypes.OverlayIcon[];
+};
+
 export type TileAnimatingState = TileState & {
   collapsing: "top" | "bottom" | "left" | "right" | "center" | null;
   scalePop: boolean;
@@ -18,6 +23,11 @@ export type TileAnimatingState = TileState & {
 export type TileSubscriber = (
   currentState: TileState | null,
   nextState: TileAnimatingState | null
+) => void;
+
+export type OverlayTileSubscriber = (
+  currentState: OverlayTileState | null,
+  nextState: OverlayTileState | null
 ) => void;
 
 export type GameContext = {
@@ -30,6 +40,14 @@ export type GameContext = {
   subscribeToTile: (
     tileId: GameTypes.TileId,
     callback: TileSubscriber
+  ) => { unsubscribe: () => void };
+  getOverlayTile: (
+    tileId: GameTypes.TileId,
+    state?: GameTypes.GameState
+  ) => OverlayTileState | null;
+  subscribeToOverlayTile: (
+    tileId: GameTypes.TileId,
+    callback: OverlayTileSubscriber
   ) => { unsubscribe: () => void };
   handleAction: (
     action: GameTypes.Action,

@@ -19,6 +19,7 @@ export default function getInitState({
     level: 1,
     seed,
     turn: 1,
+    overlayTiles: [],
   };
 
   return resolveNewLevel({

@@ -12,8 +12,11 @@ import Context, {
   TileAnimatingState,
   TileState,
   TileSubscriber,
+  OverlayTileState,
+  OverlayTileSubscriber,
 } from "./GameContext";
 import getCollapsingFromDirection from "./getCollapsingFromDirection";
+import { get } from "lodash";
 
 const duration = 300;
 const pendingDuration = duration / 2;
@@ -23,7 +26,12 @@ export function GameProvider(props: { children: React.ReactNode }) {
   const [game] = React.useState<GameTypes.GameConfig>(defaultGame);
 
   const animationProgress = useSharedValue<number>(0);
-  const callbacks = React.useRef<Record<GameTypes.TileId, TileSubscriber>>({});
+  const tileCallbacks = React.useRef<Record<GameTypes.TileId, TileSubscriber>>(
+    {}
+  );
+  const overlayCallbacks = React.useRef<
+    Record<GameTypes.TileId, OverlayTileSubscriber>
+  >({});
 
   const currentStateRef = React.useRef(
     game.applyAction({
@@ -38,7 +46,9 @@ export function GameProvider(props: { children: React.ReactNode }) {
 
   const prevStateRef = React.useRef<GameTypes.GameState | null>(null);
   const nextStateRef = React.useRef<GameTypes.GameState | null>(null);
-  const [level, setLevel] = React.useState<number>(currentStateRef.current.level);
+  const [level, setLevel] = React.useState<number>(
+    currentStateRef.current.level
+  );
   const score = useSharedValue<number | null>(currentStateRef.current.score);
   const [status, setStatus] = React.useState<GameTypes.Status>(
     currentStateRef.current.status
@@ -61,12 +71,23 @@ export function GameProvider(props: { children: React.ReactNode }) {
     []
   );
 
+  const getOverlayTile = React.useCallback<GameContext["getOverlayTile"]>(
+    (tileId, state = currentStateRef.current) => {
+      const tile = state.overlayTiles.find((t) => t.id === tileId);
+
+      if (!tile) return null;
+
+      return tile;
+    },
+    []
+  );
+
   const subscribeToTile = React.useCallback<GameContext["subscribeToTile"]>(
     (tileId, callback) => {
-      callbacks.current[tileId] = callback;
+      tileCallbacks.current[tileId] = callback;
 
       const unsubscribe = () => {
-        delete callbacks.current[tileId];
+        delete tileCallbacks.current[tileId];
       };
 
       return { unsubscribe };
@@ -74,20 +95,42 @@ export function GameProvider(props: { children: React.ReactNode }) {
     []
   );
 
+  const subscribeToOverlayTile = React.useCallback<
+    GameContext["subscribeToOverlayTile"]
+  >((tileId, callback) => {
+    overlayCallbacks.current[tileId] = callback;
+
+    const unsubscribe = () => {
+      delete overlayCallbacks.current[tileId];
+    };
+
+    return { unsubscribe };
+  }, []);
+
   const setAllToCurrentState = React.useCallback(() => {
     setStatus(currentStateRef.current.status);
     setSettings(getLevelSettings(currentStateRef.current));
     setLevel(currentStateRef.current.level);
     score.value = currentStateRef.current.score;
 
-    Object.entries(callbacks.current).forEach(([tileIdString, callback]) => {
-      const tileId = parseInt(tileIdString);
+    Object.entries(tileCallbacks.current).forEach(
+      ([tileIdString, callback]) => {
+        const tileId = parseInt(tileIdString);
 
-      callback(getTile(tileId), null);
-    });
+        callback(getTile(tileId), null);
+      }
+    );
+
+    Object.entries(overlayCallbacks.current).forEach(
+      ([tileIdString, callback]) => {
+        const tileId = parseInt(tileIdString);
+
+        callback(getOverlayTile(tileId), null);
+      }
+    );
 
     animationProgress.value = 0;
-  }, [animationProgress, getTile, score]);
+  }, [animationProgress, getTile, score, getOverlayTile]);
 
   const pendingActions = React.useRef<GameTypes.Action[]>([]);
 
@@ -149,7 +192,10 @@ export function GameProvider(props: { children: React.ReactNode }) {
 
       const diffs = getGameStateDiffs(currentStateRef.current, nextState);
 
-      const newTileStates: Record<GameTypes.TileId, TileAnimatingState | undefined> = {};
+      const newTileStates: Record<
+        GameTypes.TileId,
+        TileAnimatingState | undefined
+      > = {};
 
       diffs.forEach((diff) => {
         switch (diff.type) {
@@ -219,7 +265,8 @@ export function GameProvider(props: { children: React.ReactNode }) {
             break;
           }
           case "spawn": {
-            const { tileId, position, value, backgroundColor, textColor } = diff.payload;
+            const { tileId, position, value, backgroundColor, textColor } =
+              diff.payload;
 
             newTileStates[tileId] = {
               position,
@@ -274,10 +321,19 @@ export function GameProvider(props: { children: React.ReactNode }) {
 
         const tileId = parseInt(tileIdString);
 
-        const callback = callbacks.current[tileId];
+        const callback = tileCallbacks.current[tileId];
 
         callback(getTile(tileId), nextTileState);
       });
+
+      // TODO: Only handle the diffs for overlay tiles
+      Object.entries(overlayCallbacks.current).forEach(
+        ([tileIdString, callback]) => {
+          const tileId = parseInt(tileIdString);
+
+          callback(getOverlayTile(tileId), null);
+        }
+      );
 
       score.value = withTiming(nextState.score, {
         duration: animationDuration,
@@ -291,7 +347,15 @@ export function GameProvider(props: { children: React.ReactNode }) {
         }
       );
     },
-    [game, getTile, animationProgress, setAllToCurrentState, vibrate, score]
+    [
+      game,
+      getTile,
+      animationProgress,
+      setAllToCurrentState,
+      vibrate,
+      score,
+      getOverlayTile,
+    ]
   );
 
   const reset = React.useCallback<GameContext["reset"]>(() => {
@@ -354,6 +418,8 @@ export function GameProvider(props: { children: React.ReactNode }) {
       rows: settings.gridSize.rows,
       exitLocations,
       level,
+      getOverlayTile,
+      subscribeToOverlayTile,
     };
   }, [
     game,

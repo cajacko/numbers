@@ -4,10 +4,11 @@ import getLevelSettings from "@/game/utils/getLevelSettings";
 import getInitState from "@/game/utils/getInitState";
 import slideTiles from "@/game/utils/slideTiles";
 import applyExitLocations from "@/game/utils/applyExitLocations";
-import spawnRandomTile from "@/game/utils/spawnRandomTile";
+import spawnRandomTile from "@/game/utils/spawning/spawnRandomTile";
 import resolveEndState from "@/game/utils/resolveEndState";
 import resolveTurn from "@/game/utils/resolveTurn";
 import getColorsFromValue from "@/game/utils/getColorsFromValue";
+import resolveSpawnPriorities from "@/game/utils/spawning/resolveSpawnPriorities";
 
 const supportedActions: Types.Action[] = ["up", "down", "left", "right"];
 
@@ -53,6 +54,7 @@ const applyAction: Types.ApplyAction = (props) => {
   const overallChanged = changed || exitResult.changed;
 
   nextState = spawnRandomTile(nextState, rand, overallChanged);
+  nextState = resolveSpawnPriorities(nextState, rand);
   nextState = resolveEndState(nextState, rand);
   nextState = resolveTurn(nextState, overallChanged);
 

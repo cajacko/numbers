@@ -1,8 +1,8 @@
 import ExitLocation, {
-  ExitLocationProps,
   EXIT_LOCATION_OFFSET,
 } from "@/components/game/ExitLocation";
 import TileConnected from "@/components/game/tile/TileConnected";
+import OverlayTileConnected from "@/components/game/overlayTile/OverlayTileConnected";
 import * as GameTypes from "@/game/Game.types";
 import React from "react";
 import { StyleSheet, View } from "react-native";
@@ -12,12 +12,14 @@ import {
   GestureType,
 } from "react-native-gesture-handler";
 import { useSharedValue } from "react-native-reanimated";
+import { over } from "lodash";
 
 export interface GridProps {
   rows: number;
   columns: number;
   gesture: GestureType | ComposedGesture;
   tileIds: GameTypes.TileId[];
+  overlayTileIds: GameTypes.TileId[];
   availableHeight: number;
   availableWidth: number;
   exitLocations?: GameTypes.ExitLocation[];
@@ -33,6 +35,7 @@ export default React.memo(function Grid({
   availableHeight,
   availableWidth,
   exitLocations,
+  overlayTileIds,
 }: GridProps): React.ReactNode {
   const tileSize = React.useMemo((): number => {
     const spacing = EXIT_LOCATION_OFFSET * 2;
@@ -121,6 +124,19 @@ export default React.memo(function Grid({
     [tileIds, sizeSharedValue]
   );
 
+  const overlayTiles = React.useMemo(
+    () =>
+      overlayTileIds.map((tileId, i) => (
+        <OverlayTileConnected
+          key={`overlay-tile-${tileId}`}
+          id={tileId}
+          size={sizeSharedValue}
+          style={{ zIndex: overlayTileIds.length - i }}
+        />
+      )),
+    [overlayTileIds, sizeSharedValue]
+  );
+
   return (
     <GestureDetector gesture={gesture}>
       <View style={containerStyle}>
@@ -134,7 +150,8 @@ export default React.memo(function Grid({
               ))}
             </View>
           ))}
-          {tiles}
+          <View style={styles.tilesContainer}>{tiles}</View>
+          <View style={styles.overlayTilesContainer}>{overlayTiles}</View>
         </View>
         {exitLocations?.map(({ index, requirements, side }, i) => (
           <ExitLocation
@@ -178,5 +195,21 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: "#bead98",
     overflow: "hidden",
+  },
+  tilesContainer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 2,
+  },
+  overlayTilesContainer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 3,
   },
 });

@@ -1,5 +1,5 @@
 import * as Types from "@/game/Game.types";
-import createPositionMap from "./createPositionMap";
+import createPositionMap from "./positions/createPositionMap";
 import slideColumn from "./slideColumn";
 import slideRow from "./slideRow";
 

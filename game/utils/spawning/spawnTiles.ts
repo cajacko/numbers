@@ -1,6 +1,6 @@
 import * as Types from "@/game/Game.types";
 import spawnTile from "./spawnTile";
-import getColorsFromValue from "./getColorsFromValue";
+import getColorsFromValue from "../getColorsFromValue";
 
 export default function spawnTiles({
   state,

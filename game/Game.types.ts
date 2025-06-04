@@ -1,5 +1,9 @@
 export type TileId = number;
 
+/**
+ * Represents a position on the grid as a zero indexed tuple of row and column.
+ * For example, [0, 0] is the top-left corner of the grid, [1, 2] is the second row and third column.
+ */
 export type Position = [row: number, column: number];
 
 export type Value = number | null;
@@ -13,10 +17,25 @@ export type Tile = {
   textColor: string;
 };
 
+export type OverlayIcon = {
+  type: "spawn-priority";
+  value: number;
+};
+
+export type OverlayTile = {
+  id: TileId;
+  position: Position;
+  icons: OverlayIcon[];
+};
+
 export type Status = "user-turn" | "ai-turn" | "won" | "lost";
 
 export type Action = "up" | "down" | "left" | "right" | "tap" | "tick";
 
+/**
+ * The size of the grid, it is not 0 indexed, so a grid of size 2 x 2 will have
+ * rows: 2 and columns: 2.
+ */
 export type GridSize = {
   rows: number;
   columns: number;
@@ -43,6 +62,34 @@ export type Goal =
       payload: number;
     };
 
+type SpawnTilesMethodRandom = {
+  type: "random";
+};
+
+/**
+ * Will define the priority of each location in a right-to-left sequence. And then shift that sequence
+ * each turn
+ */
+type SpawnTilesMethodRTLSequence = {
+  type: "rtl-sequence";
+  shiftBy: number;
+  levelInitPosition?: Position | null;
+};
+
+/**
+ * Will define a random sequence of priorities for each location and that sequence will remain fixed
+ * during the level
+ */
+type SpawnTilesMethodFixedRandom = {
+  type: "fixed-random";
+  count: number;
+};
+
+export type SpawnTilesMethod =
+  | SpawnTilesMethodRandom
+  | SpawnTilesMethodRTLSequence
+  | SpawnTilesMethodFixedRandom;
+
 export type Settings = {
   gridSize: GridSize;
   permZeroTileCount?: number | null;
@@ -50,10 +97,12 @@ export type Settings = {
   newTileValue?: number;
   goals: Goal[];
   initTiles?: Tile[] | null;
+  spawnTilesMethod?: SpawnTilesMethod | null;
 };
 
 export type GameState = {
   tiles: Tile[];
+  overlayTiles: OverlayTile[];
   score: number;
   status: Status;
   level: number;

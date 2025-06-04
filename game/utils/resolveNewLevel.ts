@@ -1,8 +1,9 @@
 import * as Types from "@/game/Game.types";
 import getLevelSettings from "./getLevelSettings";
-import spawnTiles from "./spawnTiles";
+import spawnTiles from "./spawning/spawnTiles";
 import exitedTileToNewTilePosition from "./exitedTileToNewTilePosition";
 import { DEFAULT_NEW_TILE_VALUE } from "./two048Constants";
+import resolveSpawnPriorities from "./spawning/resolveSpawnPriorities";
 
 export default function resolveNewLevel({
   exitedTiles,
@@ -23,7 +24,10 @@ export default function resolveNewLevel({
     level,
     levelSettings: state.levelSettings,
     turn: 1,
+    overlayTiles: state.overlayTiles,
   };
+
+  nextState = resolveSpawnPriorities(nextState, rand);
 
   const settings = getLevelSettings(nextState);
 

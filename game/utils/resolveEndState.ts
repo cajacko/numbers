@@ -1,10 +1,13 @@
 import * as Types from "@/game/Game.types";
 import getLevelSettings from "./getLevelSettings";
-import getAvailablePositions from "./getAvailablePositions";
-import createPositionMap from "./createPositionMap";
+import getAvailablePositions from "./positions/getAvailablePositions";
+import createPositionMap from "./positions/createPositionMap";
 import getGoalFromGridSize from "./getGoalFromGridSize";
 import resolveNewLevel from "./resolveNewLevel";
 
+/**
+ * Have we won, lost or continuing? Will progress to the next level if needed
+ */
 export default function resolveEndState(
   state: Types.GameState,
   rand: Types.Rand
@@ -39,7 +42,8 @@ export default function resolveEndState(
 
   if (
     state.tiles.some(
-      (t) => t.value !== null && t.value >= getGoalFromGridSize(settings.gridSize)
+      (t) =>
+        t.value !== null && t.value >= getGoalFromGridSize(settings.gridSize)
     )
   ) {
     if (state.level >= lastLevel) {
