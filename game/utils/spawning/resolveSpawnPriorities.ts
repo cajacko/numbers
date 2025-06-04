@@ -97,10 +97,16 @@ export default function resolveSpawnPriorities(
       levelSettings.gridSize,
       levelInitPosition
     );
-  } else if (spawnTilesMethod.type === "fixed-random") {
-    if (hasSpawnPriorityOverlays) return state;
+  } else if (
+    spawnTilesMethod.type === "fixed-random" ||
+    spawnTilesMethod.type === "random-known"
+  ) {
+    // fixed random only does it once per level, so we can use the same array
+    if (hasSpawnPriorityOverlays && spawnTilesMethod.type === "fixed-random") {
+      return state;
+    }
 
-    sortedPriorityArr = priorityArr.sort(() => rand(priorityArr) - 0.5);
+    sortedPriorityArr = priorityArr.sort(() => (rand() > 0.5 ? 1 : -1));
   } else {
     // never
     throw new Error(`Unknown spawn tiles method type`);

@@ -3,8 +3,7 @@ import generateExitLocations from "./generateExitLocations";
 
 export default function getLevels(rand: Types.Rand): Types.Settings[] {
   const spawnTilesMethod: Types.SpawnTilesMethod = {
-    type: "rtl-sequence",
-    shiftBy: 5,
+    type: "random-known",
   };
 
   return [
