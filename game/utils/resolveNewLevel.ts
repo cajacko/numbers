@@ -4,6 +4,7 @@ import spawnTiles from "./spawning/spawnTiles";
 import exitedTileToNewTilePosition from "./exitedTileToNewTilePosition";
 import { DEFAULT_NEW_TILE_VALUE } from "./two048Constants";
 import resolveSpawnPriorities from "./spawning/resolveSpawnPriorities";
+import { generateExitLocation } from "./generateExitLocations";
 
 export default function resolveNewLevel({
   exitedTiles,
@@ -22,7 +23,26 @@ export default function resolveNewLevel({
     score: state.score,
     status: "user-turn",
     level,
-    levelSettings: state.levelSettings,
+    levelSettings: state.levelSettings.map((settings, i) => {
+      if (level !== i + 1) {
+        return settings;
+      }
+
+      return {
+        ...settings,
+        goals: settings.goals.map((goal) => {
+          if (goal.type === "random-exit-location") {
+            return generateExitLocation(
+              rand,
+              settings.gridSize,
+              goal.payload.value
+            );
+          }
+
+          return goal;
+        }),
+      };
+    }),
     turn: 1,
     overlayTiles: state.overlayTiles,
   };

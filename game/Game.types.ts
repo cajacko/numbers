@@ -58,10 +58,17 @@ export type Goal =
       payload: ExitLocation;
     }
   | {
+      type: "random-exit-location";
+      payload: ExitLocationRequirement;
+    }
+  | {
       type: "tile-value";
       payload: number;
     };
 
+/**
+ * Spawns tiles randomly but is not shown to the user.
+ */
 type SpawnTilesMethodRandom = {
   type: "random";
 };
@@ -82,13 +89,21 @@ type SpawnTilesMethodRTLSequence = {
  */
 type SpawnTilesMethodFixedRandom = {
   type: "fixed-random";
-  count: number;
+};
+
+/**
+ * Spawns tiles randomly but only known tiles, meaning that the user can see the tiles that will be
+ * spawned.
+ */
+type SpawnTilesMethodRandomKnown = {
+  type: "random-known";
 };
 
 export type SpawnTilesMethod =
   | SpawnTilesMethodRandom
   | SpawnTilesMethodRTLSequence
-  | SpawnTilesMethodFixedRandom;
+  | SpawnTilesMethodFixedRandom
+  | SpawnTilesMethodRandomKnown;
 
 export type Settings = {
   gridSize: GridSize;
