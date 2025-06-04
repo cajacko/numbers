@@ -53,11 +53,15 @@ export default React.memo(function OverlayTile({
 
   return (
     <Animated.View style={style} id={`tile-${id}`}>
-      {icons?.map(({ value }, index) => (
-        <Animated.View key={index} style={iconStyle}>
-          <Animated.Text style={textStyle}>{value}</Animated.Text>
-        </Animated.View>
-      ))}
+      {icons?.map(({ value }, index) => {
+        if (value > 3) return null;
+
+        return (
+          <Animated.View key={index} style={iconStyle}>
+            <Animated.Text style={textStyle}>{value}</Animated.Text>
+          </Animated.View>
+        );
+      })}
     </Animated.View>
   );
 });

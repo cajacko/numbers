@@ -1,7 +1,7 @@
 import * as Types from "@/game/Game.types";
 
 const spawnTilesMethod: Types.SpawnTilesMethod = {
-  type: "random-known",
+  type: "random",
 };
 
 const settings: Types.Settings[] = [
