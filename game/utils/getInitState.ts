@@ -1,6 +1,7 @@
 import * as Types from "@/game/Game.types";
-import getLevels from "./getLevels";
+import levels from "./levels";
 import resolveNewLevel from "./resolveNewLevel";
+import { generateExitLocation } from "./generateExitLocations";
 
 export default function getInitState({
   rand,
@@ -9,13 +10,26 @@ export default function getInitState({
   rand: Types.Rand;
   seed: string;
 }): Types.GameState {
-  const levelSettings = getLevels(rand);
+  const levelSettings = levels;
 
   let nextState: Types.GameState = {
     tiles: [],
     score: 0,
     status: "user-turn",
-    levelSettings,
+    levelSettings: levelSettings.map((settings) => ({
+      ...settings,
+      goals: settings.goals.map((goal) => {
+        if (goal.type === "random-exit-location") {
+          return generateExitLocation(
+            rand,
+            settings.gridSize,
+            goal.payload.value
+          );
+        }
+
+        return goal;
+      }),
+    })),
     level: 1,
     seed,
     turn: 1,

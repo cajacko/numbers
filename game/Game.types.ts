@@ -58,6 +58,10 @@ export type Goal =
       payload: ExitLocation;
     }
   | {
+      type: "random-exit-location";
+      payload: ExitLocationRequirement;
+    }
+  | {
       type: "tile-value";
       payload: number;
     };
