@@ -1,7 +1,7 @@
 import * as Types from "@/game/Game.types";
 import spawnTile from "./spawnTile";
-import getLevelSettings from "../getLevelSettings";
-import getColorsFromValue from "../getColorsFromValue";
+import getLevelSettings from "../levels/getLevelSettings";
+import getColorsFromValue from "../tiles/getColorsFromValue";
 import { DEFAULT_NEW_TILE_VALUE } from "../two048Constants";
 
 export default function spawnRandomTile(

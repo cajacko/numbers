@@ -1,13 +1,13 @@
 import * as Types from "@/game/Game.types";
 import withRand from "@/utils/withRand";
-import getLevelSettings from "@/game/utils/getLevelSettings";
-import getInitState from "@/game/utils/getInitState";
-import slideTiles from "@/game/utils/slideTiles";
-import applyExitLocations from "@/game/utils/applyExitLocations";
+import getLevelSettings from "@/game/utils/levels/getLevelSettings";
+import getInitState from "@/game/utils/levels/getInitState";
+import slideTiles from "@/game/utils/movement/slideTiles";
+import applyExitLocations from "@/game/utils/exits/applyExitLocations";
 import spawnRandomTile from "@/game/utils/spawning/spawnRandomTile";
 import resolveEndState from "@/game/utils/resolveEndState";
 import resolveTurn from "@/game/utils/resolveTurn";
-import getColorsFromValue from "@/game/utils/getColorsFromValue";
+import getColorsFromValue from "@/game/utils/tiles/getColorsFromValue";
 import resolveSpawnPriorities from "@/game/utils/spawning/resolveSpawnPriorities";
 import resolveEdit from "@/game/utils/resolveEdit";
 

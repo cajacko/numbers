@@ -1,10 +1,10 @@
 import * as Types from "@/game/Game.types";
 import getLevelSettings from "./getLevelSettings";
-import spawnTiles from "./spawning/spawnTiles";
-import exitedTileToNewTilePosition from "./exitedTileToNewTilePosition";
-import { DEFAULT_NEW_TILE_VALUE } from "./two048Constants";
-import resolveSpawnPriorities from "./spawning/resolveSpawnPriorities";
-import { generateExitLocation } from "./generateExitLocations";
+import spawnTiles from "../spawning/spawnTiles";
+import exitedTileToNewTilePosition from "../exitedTileToNewTilePosition";
+import { DEFAULT_NEW_TILE_VALUE } from "../two048Constants";
+import resolveSpawnPriorities from "../spawning/resolveSpawnPriorities";
+import { generateExitLocation } from "../exits/generateExitLocations";
 
 export default function resolveNewLevel({
   exitedTiles,

@@ -1,5 +1,5 @@
 import * as Types from "../Game.types";
-import getLevelSettings from "@/game/utils/getLevelSettings";
+import getLevelSettings from "@/game/utils/levels/getLevelSettings";
 
 /**
  * For the grid size at this level, it will loop over every position and call the callback function.

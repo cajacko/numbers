@@ -1,5 +1,5 @@
 import * as Types from "@/game/Game.types";
-import getColorsFromValue from "./getColorsFromValue";
+import getColorsFromValue from "../tiles/getColorsFromValue";
 
 export default function mergeTiles(
   target: Types.Tile,
