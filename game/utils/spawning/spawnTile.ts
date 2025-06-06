@@ -1,5 +1,5 @@
 import * as Types from "@/game/Game.types";
-import getFreeTileId from "../getFreeTileId";
+import getFreeTileId from "../tiles/getFreeTileId";
 import getRandomAvailablePosition, {
   GetRandomAvailablePositionProps,
 } from "../positions/getRandomAvailablePosition";

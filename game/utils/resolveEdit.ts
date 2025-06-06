@@ -1,68 +1,14 @@
 import * as Types from "@/game/Game.types";
 import spawnTile from "@/game/utils/spawning/spawnTile";
-import getColorsFromValue from "@/game/utils/getColorsFromValue";
-import getLevelSettings from "@/game/utils/getLevelSettings";
-
-function getTileAtPosition(
-  tiles: Types.Tile[],
-  position: Types.Position
-): Types.Tile | null {
-  return (
-    tiles.find(
-      (tile) =>
-        tile.position[0] === position[0] && tile.position[1] === position[1]
-    ) || null
-  );
-}
-
-function getExitAtPosition(
-  goals: Types.Goal[],
-  position: Omit<Types.ExitLocation, "requirements">
-): Types.ExitLocation | null {
-  let exitLocation: Types.ExitLocation | null = null;
-
-  goals.forEach((goal) => {
-    if (goal.type === "exit-location") {
-      if (
-        goal.payload.side === position.side &&
-        goal.payload.index === position.index
-      ) {
-        exitLocation = goal.payload;
-      }
-    }
-  });
-
-  return exitLocation;
-}
-
-function editTile(
-  tileId: Types.TileId,
-  tile: Types.Tile,
-  state: Types.GameState
-): Types.GameState {
-  const newTiles = state.tiles.map((t) =>
-    t.id === tileId ? { ...t, ...tile } : t
-  );
-
-  return {
-    ...state,
-    tiles: newTiles,
-  };
-}
-
-function removeTileAtPosition(
-  state: Types.GameState,
-  position: Types.Position
-): Types.GameState {
-  const newTiles = state.tiles.filter(
-    (t) => t.position[0] !== position[0] || t.position[1] !== position[1]
-  );
-
-  return {
-    ...state,
-    tiles: newTiles,
-  };
-}
+import getColorsFromValue from "@/game/utils/tiles/getColorsFromValue";
+import getLevelSettings from "@/game/utils/levels/getLevelSettings";
+import getTileAtPosition from "@/game/utils/tiles/getTileAtPosition";
+import editTile from "@/game/utils/tiles/editTile";
+import removeTileAtPosition from "@/game/utils/tiles/removeTileAtPosition";
+import getExitAtPosition from "@/game/utils/exits/getExitAtPosition";
+import removeExitAtPosition from "@/game/utils/exits/removeExitAtPosition";
+import spawnExitLocation from "@/game/utils/exits/spawnExitLocation";
+import editExitLocationAtPosition from "@/game/utils/exits/editExitLocationAtPosition";
 
 const rand = () => 0;
 
@@ -114,87 +60,6 @@ function resolveEditTile(
   return nextState;
 }
 
-function removeExitAtPosition(
-  state: Types.GameState,
-  exitPosition: Omit<Types.EditExitLocation, "type">
-): Types.GameState {
-  const settings = getLevelSettings(state);
-
-  const newGoals = settings.goals.filter((goal) => {
-    if (goal.type === "exit-location") {
-      return (
-        goal.payload.side !== exitPosition.side ||
-        goal.payload.index !== exitPosition.index
-      );
-    }
-
-    return true;
-  });
-
-  return {
-    ...state,
-    levelSettings: state.levelSettings.map((levelSettings, i) =>
-      state.level !== i + 1
-        ? levelSettings
-        : {
-            ...levelSettings,
-            goals: newGoals,
-          }
-    ),
-  };
-}
-
-function spawnExitLocation(
-  state: Types.GameState,
-  location: Types.ExitLocation
-): Types.GameState {
-  const settings = getLevelSettings(state);
-
-  // Check if the exit location already exists in this location, if so set it as the new exit
-
-  let hasUpdatedExistingExit = false;
-
-  let newGoals = settings.goals.map((goal) => {
-    if (
-      goal.type === "exit-location" &&
-      goal.payload.side === location.side &&
-      goal.payload.index === location.index
-    ) {
-      hasUpdatedExistingExit = true;
-      return { ...goal, payload: location };
-    }
-    return goal;
-  });
-
-  if (!hasUpdatedExistingExit) {
-    newGoals = [
-      ...settings.goals,
-      { type: "exit-location", payload: location },
-    ];
-  }
-
-  return {
-    ...state,
-    levelSettings: state.levelSettings.map(
-      (levelSettings, i): Types.Settings =>
-        state.level !== i + 1
-          ? levelSettings
-          : {
-              ...levelSettings,
-              goals: newGoals,
-            }
-    ),
-  };
-}
-
-function editExitLocationAtPosition(
-  state: Types.GameState,
-  location: Types.ExitLocation
-): Types.GameState {
-  // Spawn already resolves the exit location in the same location
-  return spawnExitLocation(state, location);
-}
-
 function resolveEditExit(
   action: Types.EditAction<Types.EditExitLocation>
 ): Types.GameState {
@@ -203,7 +68,6 @@ function resolveEditExit(
   }
 
   const settings = getLevelSettings(action.state);
-
   const exitLocation = getExitAtPosition(settings.goals, action.location);
 
   if (!exitLocation) {
@@ -212,7 +76,7 @@ function resolveEditExit(
       index: action.location.index,
       requirements: {
         type: "greater-than-equal-to",
-        value: 0, // Default value, can be adjusted as needed
+        value: 0,
       },
     });
   }

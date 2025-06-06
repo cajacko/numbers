@@ -1,9 +1,9 @@
 import * as Types from "@/game/Game.types";
-import getLevelSettings from "./getLevelSettings";
+import getLevelSettings from "./levels/getLevelSettings";
 import getAvailablePositions from "./positions/getAvailablePositions";
 import createPositionMap from "./positions/createPositionMap";
-import getGoalFromGridSize from "./getGoalFromGridSize";
-import resolveNewLevel from "./resolveNewLevel";
+import getGoalFromGridSize from "./levels/getGoalFromGridSize";
+import resolveNewLevel from "./levels/resolveNewLevel";
 
 /**
  * Have we won, lost or continuing? Will progress to the next level if needed

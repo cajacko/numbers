@@ -1,5 +1,5 @@
 import * as Types from "../../Game.types";
-import getLevelSettings from "@/game/utils/getLevelSettings";
+import getLevelSettings from "@/game/utils/levels/getLevelSettings";
 import setOverlayTiles from "@/game/utils/setOverlayTiles";
 import getSnakedPriorityArr from "@/game/utils/spawning/getRightToLeftPriorityArr";
 

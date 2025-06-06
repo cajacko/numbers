@@ -1,5 +1,5 @@
 import * as Types from "@/game/Game.types";
-import { SIDES } from "./two048Constants";
+import { SIDES } from "../two048Constants";
 
 export function generateExitLocation(
   rand: Types.Rand,

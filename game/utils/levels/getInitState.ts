@@ -1,7 +1,7 @@
 import * as Types from "@/game/Game.types";
 import levels from "./levels";
 import resolveNewLevel from "./resolveNewLevel";
-import { generateExitLocation } from "./generateExitLocations";
+import { generateExitLocation } from "../exits/generateExitLocations";
 
 export default function getInitState({
   rand,

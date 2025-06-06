@@ -1,7 +1,7 @@
 import * as Types from "@/game/Game.types";
-import moveTile from "./moveTile";
-import requirementsMet from "./requirementsMet";
-import getLevelSettings from "./getLevelSettings";
+import moveTile from "../movement/moveTile";
+import requirementsMet from "../requirementsMet";
+import getLevelSettings from "../levels/getLevelSettings";
 
 const actionToExitLocationSide: Record<
   Types.RegularActionType,

@@ -1,5 +1,5 @@
 import * as Types from "@/game/Game.types";
-import getLevelSettings from "../getLevelSettings";
+import getLevelSettings from "../levels/getLevelSettings";
 
 export default function getAvailablePositions(
   state: Types.GameState
