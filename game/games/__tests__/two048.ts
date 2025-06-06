@@ -31,7 +31,7 @@ const descriptions: {
   cases: {
     title: string;
     prevTiles: TilePosition[];
-    applyAction: Types.Action;
+    applyAction: Types.RegularActionType;
     randomAvailablePosition: Types.Position | null;
     expectedPositions?: TilePosition[];
     expectedStatus?: Types.GameState["status"];
@@ -715,7 +715,7 @@ describe("two048 game", () => {
 
             const nextState = two048.applyAction({
               state: prevState,
-              action: applyAction,
+              type: applyAction,
             });
 
             if (expectedStatus) {
