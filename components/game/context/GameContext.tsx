@@ -50,7 +50,7 @@ export type GameContext = {
     callback: OverlayTileSubscriber
   ) => { unsubscribe: () => void };
   handleAction: (
-    action: GameTypes.Action,
+    action: GameTypes.RegularActionType,
     options?: {
       animationDuration?: number;
     }

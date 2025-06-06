@@ -11,9 +11,9 @@ import * as Clipboard from "expo-clipboard";
 export interface GameProps {}
 
 function ConnectedGame(props: GameProps): React.ReactNode {
-  const { score, getTestProps, status, level } = useGameContext();
+  const [editMode, setEditMode] = React.useState(false);
+  const { score, getTestProps, status, level, reset } = useGameContext();
   const scoreColor = useSharedValue<string | null>("white");
-  const { gesture, reset } = useGameController();
   const insets = useSafeAreaInsets();
 
   const copyTestProps = React.useCallback(async () => {
@@ -93,9 +93,9 @@ function ConnectedGame(props: GameProps): React.ReactNode {
         </View>
 
         <GridConnected
-          gesture={gesture}
           availableHeight={availableSize.height}
           availableWidth={availableSize.width}
+          editMode={editMode}
         />
 
         <View style={footerStyle}>
@@ -110,6 +110,12 @@ function ConnectedGame(props: GameProps): React.ReactNode {
               <Button title="reset" onPress={reset} />
             </View>
           )}
+          <View style={styles.reset}>
+            <Button
+              title={editMode ? "Play Mode" : "Edit Mode"}
+              onPress={() => setEditMode(!editMode)}
+            />
+          </View>
         </View>
       </View>
     </>

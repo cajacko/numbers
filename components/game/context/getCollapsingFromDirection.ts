@@ -1,7 +1,7 @@
 import * as GameTypes from "@/game/Game.types";
 
 export default function getCollapsingFromDirection(
-  action: GameTypes.Action
+  action: GameTypes.RegularActionType
 ): "top" | "bottom" | "left" | "right" | null {
   switch (action) {
     case "up":

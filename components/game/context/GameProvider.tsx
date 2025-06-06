@@ -35,7 +35,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
 
   const currentStateRef = React.useRef(
     game.applyAction({
-      action: null,
+      type: "init",
       seed: generateSeed(),
     })
   );
@@ -132,7 +132,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
     animationProgress.value = 0;
   }, [animationProgress, getTile, score, getOverlayTile]);
 
-  const pendingActions = React.useRef<GameTypes.Action[]>([]);
+  const pendingActions = React.useRef<GameTypes.RegularActionType[]>([]);
 
   const handleAction = React.useCallback<GameContext["handleAction"]>(
     (action, options) => {
@@ -158,7 +158,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
       animationProgress.value = 0;
 
       const nextState = game.applyAction({
-        action,
+        type: action,
         state: currentStateRef.current,
       });
 
@@ -362,7 +362,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
     prevStateRef.current = currentStateRef.current;
 
     currentStateRef.current = game.applyAction({
-      action: null,
+      type: "reset",
       seed: generateSeed(),
     });
 
@@ -433,6 +433,8 @@ export function GameProvider(props: { children: React.ReactNode }) {
     getTestProps,
     settings,
     level,
+    getOverlayTile,
+    subscribeToOverlayTile,
   ]);
 
   return <Context.Provider value={value}>{props.children}</Context.Provider>;

@@ -5,7 +5,7 @@ import slideRow from "./slideRow";
 
 export default function slideTiles(
   tiles: Types.Tile[],
-  action: Types.Action,
+  action: Types.RegularActionType,
   gridSize: Types.GridSize
 ) {
   const working: Types.Tile[] = tiles.map((t) => ({ ...t, mergedFrom: null }));

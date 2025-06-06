@@ -11,8 +11,7 @@ import {
   GestureDetector,
   GestureType,
 } from "react-native-gesture-handler";
-import { useSharedValue } from "react-native-reanimated";
-import { over } from "lodash";
+import { SharedValue, useSharedValue } from "react-native-reanimated";
 
 export interface GridProps {
   rows: number;
@@ -23,37 +22,64 @@ export interface GridProps {
   availableHeight: number;
   availableWidth: number;
   exitLocations?: GameTypes.ExitLocation[];
+  tileSize?: number;
+  tileSizeSharedValue?: SharedValue<number>;
+  gridPadding?: number;
 }
 
 const maxTileSize = 250;
 
-export default React.memo(function Grid({
-  columns,
-  rows,
-  gesture,
-  tileIds,
-  availableHeight,
-  availableWidth,
-  exitLocations,
-  overlayTileIds,
-}: GridProps): React.ReactNode {
+export function useGridDimensions(
+  props: Pick<
+    GridProps,
+    | "rows"
+    | "columns"
+    | "availableHeight"
+    | "availableWidth"
+    | "tileSize"
+    | "tileSizeSharedValue"
+    | "gridPadding"
+  >
+) {
+  const gridPadding = EXIT_LOCATION_OFFSET;
+
   const tileSize = React.useMemo((): number => {
-    const spacing = EXIT_LOCATION_OFFSET * 2;
+    const spacing = gridPadding * 2;
 
     const size = Math.min(
-      (availableHeight - spacing) / rows,
-      (availableWidth - spacing) / columns,
+      (props.availableHeight - spacing) / props.rows,
+      (props.availableWidth - spacing) / props.columns,
       maxTileSize
     );
 
     return Math.floor(size);
-  }, [availableHeight, availableWidth, columns, rows]);
+  }, [
+    props.availableHeight,
+    props.availableWidth,
+    props.columns,
+    props.rows,
+    gridPadding,
+  ]);
 
-  const sizeSharedValue = useSharedValue<number>(tileSize);
+  const tileSizeSharedValue = useSharedValue<number>(tileSize);
 
   React.useEffect(() => {
-    sizeSharedValue.value = tileSize;
-  }, [tileSize, sizeSharedValue]);
+    tileSizeSharedValue.value = tileSize;
+  }, [tileSize, tileSizeSharedValue]);
+
+  return {
+    tileSize: props.tileSize ?? tileSize,
+    tileSizeSharedValue: props.tileSizeSharedValue ?? tileSizeSharedValue,
+    gridPadding: props.gridPadding ?? gridPadding,
+  };
+}
+
+export default React.memo(function Grid(props: GridProps): React.ReactNode {
+  const { rows, columns, tileIds, overlayTileIds, gesture, exitLocations } =
+    props;
+
+  const { tileSize, tileSizeSharedValue, gridPadding } =
+    useGridDimensions(props);
 
   const innerStyle = React.useMemo(
     () =>
@@ -70,9 +96,8 @@ export default React.memo(function Grid({
   );
 
   const containerStyle = React.useMemo(
-    () =>
-      StyleSheet.flatten([styles.container, { padding: EXIT_LOCATION_OFFSET }]),
-    []
+    () => StyleSheet.flatten([styles.container, { padding: gridPadding }]),
+    [gridPadding]
   );
 
   const rowStyle = React.useMemo(
@@ -117,11 +142,11 @@ export default React.memo(function Grid({
         <TileConnected
           key={`tile-${tileId}`}
           id={tileId}
-          size={sizeSharedValue}
+          size={tileSizeSharedValue}
           style={{ zIndex: tileIds.length - i }}
         />
       )),
-    [tileIds, sizeSharedValue]
+    [tileIds, tileSizeSharedValue]
   );
 
   const overlayTiles = React.useMemo(
@@ -130,11 +155,11 @@ export default React.memo(function Grid({
         <OverlayTileConnected
           key={`overlay-tile-${tileId}`}
           id={tileId}
-          size={sizeSharedValue}
+          size={tileSizeSharedValue}
           style={{ zIndex: overlayTileIds.length - i }}
         />
       )),
-    [overlayTileIds, sizeSharedValue]
+    [overlayTileIds, tileSizeSharedValue]
   );
 
   return (
@@ -160,7 +185,7 @@ export default React.memo(function Grid({
             side={side}
             type={requirements.type}
             value={requirements.value}
-            tileSize={sizeSharedValue}
+            tileSize={tileSizeSharedValue}
             columns={columns}
             rows={rows}
           />
