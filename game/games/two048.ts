@@ -9,22 +9,37 @@ import resolveEndState from "@/game/utils/resolveEndState";
 import resolveTurn from "@/game/utils/resolveTurn";
 import getColorsFromValue from "@/game/utils/getColorsFromValue";
 import resolveSpawnPriorities from "@/game/utils/spawning/resolveSpawnPriorities";
+import resolveEdit from "@/game/utils/resolveEdit";
 
-const supportedActions: Types.Action[] = ["up", "down", "left", "right"];
+const supportedActions: Types.RegularActionType[] = [
+  "up",
+  "down",
+  "left",
+  "right",
+];
 
-const applyAction: Types.ApplyAction = (props) => {
-  if (!props.action) {
-    const rand = withRand(props.seed);
+const applyAction: Types.ApplyAction = (action) => {
+  switch (action.type) {
+    case "init":
+    case "reset": {
+      const rand = withRand(action.seed);
 
-    return getInitState({
-      rand,
-      seed: props.seed,
-    });
+      return getInitState({
+        rand,
+        seed: action.seed,
+      });
+    }
+    case "edit-hold":
+    case "edit-tap": {
+      return resolveEdit(action);
+    }
+    default:
+      break;
   }
 
-  const { state, action } = props;
+  const { type, state } = action;
 
-  if (!supportedActions.includes(action)) {
+  if (!supportedActions.includes(type)) {
     return state;
   }
 
@@ -40,7 +55,7 @@ const applyAction: Types.ApplyAction = (props) => {
 
   const { tiles, scoreIncrease, changed } = slideTiles(
     nextState.tiles,
-    action,
+    type,
     gridSize
   );
 
@@ -50,7 +65,7 @@ const applyAction: Types.ApplyAction = (props) => {
     score: state.score + scoreIncrease,
   };
 
-  const exitResult = applyExitLocations(nextState, gridSize, action);
+  const exitResult = applyExitLocations(nextState, gridSize, type);
   const overallChanged = changed || exitResult.changed;
 
   nextState = spawnRandomTile(nextState, rand, overallChanged);

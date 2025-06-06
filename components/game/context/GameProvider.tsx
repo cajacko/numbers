@@ -12,11 +12,9 @@ import Context, {
   TileAnimatingState,
   TileState,
   TileSubscriber,
-  OverlayTileState,
   OverlayTileSubscriber,
 } from "./GameContext";
 import getCollapsingFromDirection from "./getCollapsingFromDirection";
-import { get } from "lodash";
 
 const duration = 300;
 const pendingDuration = duration / 2;
@@ -35,7 +33,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
 
   const currentStateRef = React.useRef(
     game.applyAction({
-      action: null,
+      type: "init",
       seed: generateSeed(),
     })
   );
@@ -132,16 +130,19 @@ export function GameProvider(props: { children: React.ReactNode }) {
     animationProgress.value = 0;
   }, [animationProgress, getTile, score, getOverlayTile]);
 
-  const pendingActions = React.useRef<GameTypes.Action[]>([]);
+  const pendingActions = React.useRef<GameTypes.RegularActionType[]>([]);
 
   const handleAction = React.useCallback<GameContext["handleAction"]>(
     (action, options) => {
       if (nextStateRef.current) {
-        if (nextStateRef.current.status !== "user-turn" && action !== "tick")
+        if (
+          nextStateRef.current.status !== "user-turn" &&
+          action.type !== "tick"
+        )
           return;
       } else if (
         currentStateRef.current.status !== "user-turn" &&
-        action !== "tick"
+        action.type !== "tick"
       ) {
         return;
       }
@@ -151,14 +152,17 @@ export function GameProvider(props: { children: React.ReactNode }) {
       vibrate?.();
 
       if (animationProgress.value > 0 && animationProgress.value < 1) {
-        pendingActions.current.push(action);
+        if (action.type !== "edit-tap" && action.type !== "edit-hold") {
+          pendingActions.current.push(action.type);
+        }
+
         return;
       }
 
       animationProgress.value = 0;
 
       const nextState = game.applyAction({
-        action,
+        ...action,
         state: currentStateRef.current,
       });
 
@@ -174,8 +178,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
         if (currentStateRef.current.status === "ai-turn") {
           pendingActions.current = [];
 
-          handleAction("tick");
-
+          handleAction({ type: "tick" });
           return;
         }
 
@@ -184,9 +187,12 @@ export function GameProvider(props: { children: React.ReactNode }) {
 
           if (!nextAction) return;
 
-          handleAction(nextAction, {
-            animationDuration: pendingDuration,
-          });
+          handleAction(
+            { type: nextAction },
+            {
+              animationDuration: pendingDuration,
+            }
+          );
         }
       }
 
@@ -258,7 +264,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
                 textColor: tile.textColor,
                 position: mergedToTile.position,
                 scalePop: false,
-                collapsing: getCollapsingFromDirection(action) ?? "center",
+                collapsing: getCollapsingFromDirection(action.type) ?? "center",
               };
             });
 
@@ -362,7 +368,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
     prevStateRef.current = currentStateRef.current;
 
     currentStateRef.current = game.applyAction({
-      action: null,
+      type: "reset",
       seed: generateSeed(),
     });
 
@@ -433,6 +439,8 @@ export function GameProvider(props: { children: React.ReactNode }) {
     getTestProps,
     settings,
     level,
+    getOverlayTile,
+    subscribeToOverlayTile,
   ]);
 
   return <Context.Provider value={value}>{props.children}</Context.Provider>;

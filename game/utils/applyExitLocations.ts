@@ -3,7 +3,10 @@ import moveTile from "./moveTile";
 import requirementsMet from "./requirementsMet";
 import getLevelSettings from "./getLevelSettings";
 
-const actionToExitLocationSide: Record<Types.Action, Types.ExitLocation["side"] | null> = {
+const actionToExitLocationSide: Record<
+  Types.RegularActionType,
+  Types.ExitLocation["side"] | null
+> = {
   up: "top",
   down: "bottom",
   left: "left",
@@ -15,7 +18,7 @@ const actionToExitLocationSide: Record<Types.Action, Types.ExitLocation["side"] 
 export default function applyExitLocations(
   state: Types.GameState,
   gridSize: Types.GridSize,
-  action: Types.Action
+  action: Types.RegularActionType
 ): { changed: boolean } {
   let changed = false;
 

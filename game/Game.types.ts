@@ -30,7 +30,42 @@ export type OverlayTile = {
 
 export type Status = "user-turn" | "ai-turn" | "won" | "lost";
 
-export type Action = "up" | "down" | "left" | "right" | "tap" | "tick";
+export type RegularActionType =
+  | "up"
+  | "down"
+  | "left"
+  | "right"
+  | "tap"
+  | "tick";
+
+export type RegularAction = {
+  type: RegularActionType;
+  state: GameState;
+};
+
+export type EditTileLocation = {
+  type: "tile";
+  position: Position;
+};
+
+export type EditExitLocation = {
+  type: "exit-location";
+  side: "top" | "bottom" | "left" | "right";
+  index: number;
+};
+
+export type EditLocation = EditTileLocation | EditExitLocation;
+
+export type EditAction<L extends EditLocation = EditLocation> = {
+  type: "edit-tap" | "edit-hold";
+  state: GameState;
+  location: L;
+};
+
+export type Action =
+  | RegularAction
+  | { type: "reset" | "init"; seed: string }
+  | EditAction;
 
 /**
  * The size of the grid, it is not 0 indexed, so a grid of size 2 x 2 will have
@@ -126,20 +161,10 @@ export type GameState = {
   levelSettings: Settings[];
 };
 
-export type ApplyAction = (
-  props:
-    | {
-        /**
-         * null if the game is not initialized yet.
-         */
-        state: GameState;
-        action: Action;
-      }
-    | { action: null; seed: string }
-) => GameState;
+export type ApplyAction = (action: Action) => GameState;
 
 export type GameConfig = {
-  supportedActions: Action[];
+  supportedActions: RegularActionType[];
   name: string;
   applyAction: ApplyAction;
 };
