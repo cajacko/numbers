@@ -38,26 +38,30 @@ export type RegularActionType =
   | "tap"
   | "tick";
 
+export type RegularAction = {
+  type: RegularActionType;
+  state: GameState;
+};
+
+export type EditAction = {
+  type: "edit-tap" | "edit-hold";
+  state: GameState;
+  location:
+    | {
+        type: "tile";
+        position: Position;
+      }
+    | {
+        type: "exit-location";
+        side: "top" | "bottom" | "left" | "right";
+        index: number;
+      };
+};
+
 export type Action =
-  | {
-      type: RegularActionType;
-      state: GameState;
-    }
+  | RegularAction
   | { type: "reset" | "init"; seed: string }
-  | {
-      type: "edit-tap";
-      state: GameState;
-      location:
-        | {
-            type: "tile";
-            position: Position;
-          }
-        | {
-            type: "exit-location";
-            side: "top" | "bottom" | "left" | "right";
-            index: number;
-          };
-    };
+  | EditAction;
 
 /**
  * The size of the grid, it is not 0 indexed, so a grid of size 2 x 2 will have

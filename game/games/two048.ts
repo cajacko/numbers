@@ -28,6 +28,7 @@ const applyAction: Types.ApplyAction = (action) => {
         seed: action.seed,
       });
     }
+    case "edit-hold":
     case "edit-tap": {
       return action.state;
     }

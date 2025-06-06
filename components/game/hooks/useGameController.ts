@@ -4,25 +4,99 @@ import React from "react";
 import { Gesture } from "react-native-gesture-handler";
 import { runOnJS, SharedValue } from "react-native-reanimated";
 
+function positionToEditLocation(
+  gridSize: GameTypes.GridSize,
+  position: GameTypes.Position
+): GameTypes.EditAction["location"] | null {
+  const { rows, columns } = gridSize;
+  const [row, column] = position;
+
+  const isAboveGrid = row < 0;
+  const isBelowGrid = row >= rows;
+  const isLeftOfGrid = column < 0;
+  const isRightOfGrid = column >= columns;
+
+  if (isAboveGrid && isLeftOfGrid) {
+    return null; // Tapping on the top-left corner outside the grid
+  }
+
+  if (isBelowGrid && isRightOfGrid) {
+    return null; // Tapping on the bottom-right corner outside the grid
+  }
+
+  if (isAboveGrid && isRightOfGrid) {
+    return null; // Tapping on the top-right corner outside the grid
+  }
+
+  if (isBelowGrid && isLeftOfGrid) {
+    return null; // Tapping on the bottom-left corner outside the grid
+  }
+
+  if (isAboveGrid) {
+    // Tapping on the top row outside the grid
+    return {
+      type: "exit-location",
+      side: "top",
+      index: column,
+    };
+  }
+  if (isBelowGrid) {
+    // Tapping on the bottom row outside the grid
+    return {
+      type: "exit-location",
+      side: "bottom",
+      index: column,
+    };
+  }
+  if (isLeftOfGrid) {
+    // Tapping on the left column outside the grid
+    return {
+      type: "exit-location",
+      side: "left",
+      index: row,
+    };
+  }
+  if (isRightOfGrid) {
+    // Tapping on the right column outside the grid
+    return {
+      type: "exit-location",
+      side: "right",
+      index: row,
+    };
+  }
+
+  // Otherwise, it's a tile
+  return { type: "tile", position };
+}
+
 export default function useGameController(props: {
   editMode: boolean;
   gridPadding: number;
   tileSize: SharedValue<number>;
 }) {
   const { editMode, gridPadding, tileSize } = props;
-  const { handleAction, reset } = useGameContext();
+  const { handleAction, reset, rows, columns } = useGameContext();
 
   const onTap = React.useCallback(
-    (props: { row: number; column: number }) => {
+    (position: GameTypes.Position) => {
       if (!editMode) {
-        handleAction("tap");
+        handleAction({ type: "tap" });
 
         return;
       }
 
-      console.log("Tapped tile at row:", props.row, "column:", props.column);
+      const location = positionToEditLocation({ rows, columns }, position);
+
+      if (!location) {
+        return;
+      }
+
+      handleAction({
+        type: "edit-tap",
+        location,
+      });
     },
-    [editMode, handleAction]
+    [editMode, handleAction, rows, columns]
   );
 
   React.useEffect(() => {
@@ -32,20 +106,20 @@ export default function useGameController(props: {
     const handleKeyDown = (e: KeyboardEvent) => {
       switch (e.key) {
         case "ArrowUp":
-          handleAction?.("up");
+          handleAction?.({ type: "up" });
           break;
         case "ArrowDown":
-          handleAction?.("down");
+          handleAction?.({ type: "down" });
           break;
         case "ArrowLeft":
-          handleAction?.("left");
+          handleAction?.({ type: "left" });
           break;
         case "ArrowRight":
-          handleAction?.("right");
+          handleAction?.({ type: "right" });
           break;
         case "Enter":
         case " ":
-          handleAction?.("tap");
+          handleAction?.({ type: "tap" });
           break;
       }
     };
@@ -72,7 +146,7 @@ export default function useGameController(props: {
           const column = Math.floor(adjustedX / tileSize.value);
           const row = Math.floor(adjustedY / tileSize.value);
 
-          runOnJS(onTap)({ row, column });
+          runOnJS(onTap)([row, column]);
         }),
     [onTap, gridPadding, tileSize]
   );
@@ -97,7 +171,7 @@ export default function useGameController(props: {
           }
 
           if (action && handleAction) {
-            runOnJS(handleAction)(action);
+            runOnJS(handleAction)({ type: action });
           }
         }),
     [handleAction, editMode]
