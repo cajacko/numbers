@@ -9,6 +9,7 @@ import resolveEndState from "@/game/utils/resolveEndState";
 import resolveTurn from "@/game/utils/resolveTurn";
 import getColorsFromValue from "@/game/utils/getColorsFromValue";
 import resolveSpawnPriorities from "@/game/utils/spawning/resolveSpawnPriorities";
+import resolveEdit from "@/game/utils/resolveEdit";
 
 const supportedActions: Types.RegularActionType[] = [
   "up",
@@ -30,7 +31,7 @@ const applyAction: Types.ApplyAction = (action) => {
     }
     case "edit-hold":
     case "edit-tap": {
-      return action.state;
+      return resolveEdit(action);
     }
     default:
       break;

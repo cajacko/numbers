@@ -78,8 +78,10 @@ export default function useGameController(props: {
   const { handleAction, reset, rows, columns } = useGameContext();
 
   const onTap = React.useCallback(
-    (position: GameTypes.Position) => {
+    (position: GameTypes.Position, type: "tap" | "hold") => {
       if (!editMode) {
+        if (type !== "tap") return;
+
         handleAction({ type: "tap" });
 
         return;
@@ -92,7 +94,7 @@ export default function useGameController(props: {
       }
 
       handleAction({
-        type: "edit-tap",
+        type: type === "tap" ? "edit-tap" : "edit-hold",
         location,
       });
     },
@@ -146,9 +148,28 @@ export default function useGameController(props: {
           const column = Math.floor(adjustedX / tileSize.value);
           const row = Math.floor(adjustedY / tileSize.value);
 
-          runOnJS(onTap)([row, column]);
+          runOnJS(onTap)([row, column], "tap");
         }),
     [onTap, gridPadding, tileSize]
+  );
+
+  const holdGesture = React.useMemo(
+    () =>
+      Gesture.LongPress()
+        .enabled(editMode)
+        .minDuration(500) // must be a long press
+        .onStart((args) => {
+          // Get the row/ column from the tile size and position. whilst removing the grid padding
+          // This can result in a negative value, which indicates tapping on our exit locations, so
+          // we can leave
+          const adjustedX = args.x - gridPadding;
+          const adjustedY = args.y - gridPadding;
+          const column = Math.floor(adjustedX / tileSize.value);
+          const row = Math.floor(adjustedY / tileSize.value);
+
+          runOnJS(onTap)([row, column], "hold");
+        }),
+    [onTap, gridPadding, tileSize, editMode]
   );
 
   const panGesture = React.useMemo(
@@ -178,8 +199,8 @@ export default function useGameController(props: {
   );
 
   const gesture = React.useMemo(
-    () => Gesture.Race(panGesture, tapGesture),
-    [tapGesture, panGesture]
+    () => Gesture.Race(panGesture, tapGesture, holdGesture),
+    [tapGesture, panGesture, holdGesture]
   );
 
   return {
