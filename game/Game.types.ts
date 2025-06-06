@@ -43,19 +43,23 @@ export type RegularAction = {
   state: GameState;
 };
 
-export type EditAction = {
+export type EditTileLocation = {
+  type: "tile";
+  position: Position;
+};
+
+export type EditExitLocation = {
+  type: "exit-location";
+  side: "top" | "bottom" | "left" | "right";
+  index: number;
+};
+
+export type EditLocation = EditTileLocation | EditExitLocation;
+
+export type EditAction<L extends EditLocation = EditLocation> = {
   type: "edit-tap" | "edit-hold";
   state: GameState;
-  location:
-    | {
-        type: "tile";
-        position: Position;
-      }
-    | {
-        type: "exit-location";
-        side: "top" | "bottom" | "left" | "right";
-        index: number;
-      };
+  location: L;
 };
 
 export type Action =
