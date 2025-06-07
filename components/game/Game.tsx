@@ -129,11 +129,9 @@ function ConnectedGame(props: GameProps): React.ReactNode {
               onPress={() => setEditMode(!editMode)}
             />
           </View>
-          {editMode && (
-            <View style={styles.reset}>
-              <Button title="Settings" onPress={openSettings} />
-            </View>
-          )}
+          <View style={styles.reset}>
+            <Button title="Settings" onPress={openSettings} />
+          </View>
         </View>
       </View>
     </>

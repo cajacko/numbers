@@ -107,20 +107,56 @@ export default function SettingsModal(
         <NumberControlField
           label="Perm Zero Tile Count"
           value={String(levelSettings.permZeroTileCount)}
-          onIncrement={() => {}}
-          onDecrement={() => {}}
+          onIncrement={withUpdateSettings({
+            permZeroTileCount:
+              typeof levelSettings.permZeroTileCount !== "number"
+                ? 1
+                : levelSettings.permZeroTileCount + 1,
+          })}
+          onDecrement={withUpdateSettings({
+            permZeroTileCount:
+              typeof levelSettings.permZeroTileCount !== "number"
+                ? 0
+                : levelSettings.permZeroTileCount === 0
+                ? null
+                : Math.max(0, levelSettings.permZeroTileCount - 1),
+          })}
         />
         <NumberControlField
           label="Random Fixed Tiles"
           value={String(levelSettings.randomFixedTiles)}
-          onIncrement={() => {}}
-          onDecrement={() => {}}
+          onIncrement={withUpdateSettings({
+            randomFixedTiles:
+              typeof levelSettings.randomFixedTiles !== "number"
+                ? 1
+                : levelSettings.randomFixedTiles + 1,
+          })}
+          onDecrement={withUpdateSettings({
+            randomFixedTiles:
+              typeof levelSettings.randomFixedTiles !== "number"
+                ? 0
+                : levelSettings.randomFixedTiles === 0
+                ? null
+                : Math.max(0, levelSettings.randomFixedTiles - 1),
+          })}
         />
         <NumberControlField
           label="New Tile Value"
           value={String(levelSettings.newTileValue)}
-          onIncrement={() => {}}
-          onDecrement={() => {}}
+          onIncrement={withUpdateSettings({
+            newTileValue:
+              typeof levelSettings.newTileValue !== "number"
+                ? 1
+                : levelSettings.newTileValue * 2,
+          })}
+          onDecrement={withUpdateSettings({
+            newTileValue:
+              typeof levelSettings.newTileValue !== "number"
+                ? 0
+                : levelSettings.newTileValue === 0
+                ? undefined
+                : Math.max(0, levelSettings.newTileValue / 2),
+          })}
         />
         <NumberControlField
           label="Tile Value Goal"
