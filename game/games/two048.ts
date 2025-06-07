@@ -10,6 +10,7 @@ import resolveTurn from "@/game/utils/resolveTurn";
 import getColorsFromValue from "@/game/utils/getColorsFromValue";
 import resolveSpawnPriorities from "@/game/utils/spawning/resolveSpawnPriorities";
 import resolveEdit from "@/game/utils/resolveEdit";
+import resolveEditLevelSettings from "@/game/utils/resolveEditLevelSettings";
 
 const supportedActions: Types.RegularActionType[] = [
   "up",
@@ -19,6 +20,8 @@ const supportedActions: Types.RegularActionType[] = [
 ];
 
 const applyAction: Types.ApplyAction = (action) => {
+  // console.log("applyAction", action);
+
   switch (action.type) {
     case "init":
     case "reset": {
@@ -33,6 +36,8 @@ const applyAction: Types.ApplyAction = (action) => {
     case "edit-tap": {
       return resolveEdit(action);
     }
+    case "edit-level-settings":
+      return resolveEditLevelSettings(action);
     default:
       break;
   }

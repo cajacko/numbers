@@ -152,7 +152,11 @@ export function GameProvider(props: { children: React.ReactNode }) {
       vibrate?.();
 
       if (animationProgress.value > 0 && animationProgress.value < 1) {
-        if (action.type !== "edit-tap" && action.type !== "edit-hold") {
+        if (
+          action.type !== "edit-tap" &&
+          action.type !== "edit-hold" &&
+          action.type !== "edit-level-settings"
+        ) {
           pendingActions.current.push(action.type);
         }
 
@@ -401,7 +405,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
     };
   }, []);
 
-  const value = React.useMemo<GameContext>(() => {
+  const value = React.useMemo<GameContext>((): GameContext => {
     const exitLocations: GameTypes.ExitLocation[] = [];
 
     settings.goals.forEach((goal) => {
@@ -420,8 +424,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
       score,
       status,
       getTestProps,
-      columns: settings.gridSize.columns,
-      rows: settings.gridSize.rows,
+      levelSettings: settings,
       exitLocations,
       level,
       getOverlayTile,

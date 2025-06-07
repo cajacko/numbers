@@ -20,7 +20,12 @@ export default React.memo(function GridConnected({
   editMode,
   ...props
 }: GridConnectedProps): React.ReactNode {
-  const { rows, columns, exitLocations } = useGameContext();
+  const {
+    levelSettings: {
+      gridSize: { columns, rows },
+    },
+    exitLocations,
+  } = useGameContext();
 
   const gridDimensions = useGridDimensions({
     ...props,

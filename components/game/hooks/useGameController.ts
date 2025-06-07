@@ -75,7 +75,13 @@ export default function useGameController(props: {
   tileSize: SharedValue<number>;
 }) {
   const { editMode, gridPadding, tileSize } = props;
-  const { handleAction, reset, rows, columns } = useGameContext();
+  const {
+    handleAction,
+    reset,
+    levelSettings: {
+      gridSize: { columns, rows },
+    },
+  } = useGameContext();
 
   const onTap = React.useCallback(
     (position: GameTypes.Position, type: "tap" | "hold") => {

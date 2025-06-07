@@ -62,10 +62,18 @@ export type EditAction<L extends EditLocation = EditLocation> = {
   location: L;
 };
 
+export type EditLevelSettings = {
+  type: "edit-level-settings";
+  settings: Partial<Settings>;
+  level: number;
+  state: GameState;
+};
+
 export type Action =
   | RegularAction
   | { type: "reset" | "init"; seed: string }
-  | EditAction;
+  | EditAction
+  | EditLevelSettings;
 
 /**
  * The size of the grid, it is not 0 indexed, so a grid of size 2 x 2 will have

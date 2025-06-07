@@ -52,17 +52,17 @@ export type GameContext = {
   handleAction: (
     action:
       | Omit<GameTypes.RegularAction, "state">
-      | Omit<GameTypes.EditAction, "state">,
+      | Omit<GameTypes.EditAction, "state">
+      | Omit<GameTypes.EditLevelSettings, "state">,
     options?: {
       animationDuration?: number;
     }
   ) => void;
   reset: () => void;
-  columns: number;
-  rows: number;
   score: SharedValue<number | null>;
   status: GameTypes.Status;
   level: number;
+  levelSettings: GameTypes.Settings;
   exitLocations: GameTypes.ExitLocation[];
   getTestProps: () => { current: TestProps; previous: TestProps | null };
 };

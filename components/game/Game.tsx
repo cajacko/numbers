@@ -2,11 +2,11 @@ import { GameProvider, useGameContext } from "@/components/game/Game.context";
 import GridConnected from "@/components/game/grid/GridConnected";
 import React from "react";
 import { Button, Dimensions, StyleSheet, Text, View } from "react-native";
-import useGameController from "./hooks/useGameController";
 import Number from "@/components/game/Number";
 import { useSharedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Clipboard from "expo-clipboard";
+import SettingsModal from "@/components/game/settings/SettingsModal";
 
 export interface GameProps {}
 
@@ -73,8 +73,21 @@ function ConnectedGame(props: GameProps): React.ReactNode {
     [footerHeight]
   );
 
+  const [settingsModalVisible, setSettingsModalVisible] = React.useState(false);
+  const openSettings = React.useCallback(() => {
+    setSettingsModalVisible(true);
+  }, []);
+
+  const closeSettings = React.useCallback(() => {
+    setSettingsModalVisible(false);
+  }, []);
+
   return (
     <>
+      <SettingsModal
+        visible={settingsModalVisible}
+        onRequestClose={closeSettings}
+      />
       <View style={styles.container} onLayout={onLayout}>
         <View style={headerStyle}>
           <Text style={styles.text}>Level: {level}</Text>
@@ -107,15 +120,20 @@ function ConnectedGame(props: GameProps): React.ReactNode {
           </View> */}
           {reset && (
             <View style={styles.reset}>
-              <Button title="reset" onPress={reset} />
+              <Button title="Restart Game" onPress={reset} />
             </View>
           )}
           <View style={styles.reset}>
             <Button
-              title={editMode ? "Play Mode" : "Edit Mode"}
+              title={editMode ? "Switch to Play" : "Switch to Edit"}
               onPress={() => setEditMode(!editMode)}
             />
           </View>
+          {editMode && (
+            <View style={styles.reset}>
+              <Button title="Settings" onPress={openSettings} />
+            </View>
+          )}
         </View>
       </View>
     </>
@@ -151,6 +169,7 @@ const styles = StyleSheet.create({
   footer: {
     paddingTop: 10,
     flexDirection: "row",
+    flexWrap: "wrap",
   },
   reset: {
     marginHorizontal: 10,
