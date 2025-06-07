@@ -11,6 +11,7 @@ import getColorsFromValue from "@/game/utils/getColorsFromValue";
 import resolveSpawnPriorities from "@/game/utils/spawning/resolveSpawnPriorities";
 import resolveEdit from "@/game/utils/resolveEdit";
 import resolveEditLevelSettings from "@/game/utils/resolveEditLevelSettings";
+import resolveNewLevel from "@/game/utils/resolveNewLevel";
 
 const supportedActions: Types.RegularActionType[] = [
   "up",
@@ -19,19 +20,51 @@ const supportedActions: Types.RegularActionType[] = [
   "right",
 ];
 
+function createLevelTurnSeed(state: {
+  seed: string;
+  level: number;
+  turn: number;
+}): string {
+  return `${state.seed}-${state.level}-${state.turn}`;
+}
+
 const applyAction: Types.ApplyAction = (action) => {
   // console.log("applyAction", action);
 
   switch (action.type) {
-    case "init":
-    case "reset": {
-      const rand = withRand(action.seed);
+    case "init": {
+      const rand = withRand(
+        createLevelTurnSeed({
+          seed: action.seed,
+          level: 0,
+          turn: 0,
+        })
+      );
 
       return getInitState({
         rand,
         seed: action.seed,
       });
     }
+    case "reset-game":
+    case "regenerate-level":
+    case "reset-level": {
+      const level = action.type === "reset-game" ? 1 : action.state.level;
+      const seed =
+        action.type === "regenerate-level" ? action.seed : action.state.seed;
+
+      const rand = withRand(createLevelTurnSeed({ level, turn: 1, seed }));
+
+      return resolveNewLevel({
+        // TODO: How to get previously exited tiles for reset?
+        exitedTiles: [],
+        rand,
+        state: action.state,
+        level,
+        seed,
+      });
+    }
+
     case "edit-hold":
     case "edit-tap": {
       return resolveEdit(action);
@@ -50,7 +83,7 @@ const applyAction: Types.ApplyAction = (action) => {
 
   const settings = getLevelSettings(state);
 
-  const rand = withRand(`${state.seed}-${state.level}-${state.turn}`);
+  const rand = withRand(createLevelTurnSeed(state));
 
   let nextState: Types.GameState = {
     ...state,

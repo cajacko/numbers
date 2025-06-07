@@ -368,21 +368,45 @@ export function GameProvider(props: { children: React.ReactNode }) {
     ]
   );
 
-  const reset = React.useCallback<GameContext["reset"]>(() => {
-    prevStateRef.current = currentStateRef.current;
+  const reset = React.useCallback<GameContext["reset"]>(
+    (type) => {
+      prevStateRef.current = currentStateRef.current;
 
-    currentStateRef.current = game.applyAction({
-      type: "reset",
-      seed: generateSeed(),
-    });
+      switch (type) {
+        case "init": {
+          currentStateRef.current = game.applyAction({
+            type: "init",
+            seed: generateSeed(),
+          });
+          break;
+        }
+        case "reset-level":
+        case "reset-game": {
+          currentStateRef.current = game.applyAction({
+            type: type,
+            state: currentStateRef.current,
+          });
+          break;
+        }
+        case "regenerate-level": {
+          currentStateRef.current = game.applyAction({
+            type: "regenerate-level",
+            state: currentStateRef.current,
+            seed: generateSeed(),
+          });
+          break;
+        }
+      }
 
-    setLevel(currentStateRef.current.level);
-    setSettings(getLevelSettings(currentStateRef.current));
-    setStatus(currentStateRef.current.status);
-    score.value = currentStateRef.current.score;
+      setLevel(currentStateRef.current.level);
+      setSettings(getLevelSettings(currentStateRef.current));
+      setStatus(currentStateRef.current.status);
+      score.value = currentStateRef.current.score;
 
-    setAllToCurrentState();
-  }, [game, setAllToCurrentState, score]);
+      setAllToCurrentState();
+    },
+    [game, setAllToCurrentState, score]
+  );
 
   const init = React.useRef(true);
 
@@ -393,7 +417,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
       return;
     }
 
-    reset();
+    reset("init");
   }, [game, reset]);
 
   const getTestProps = React.useCallback<GameContext["getTestProps"]>(() => {

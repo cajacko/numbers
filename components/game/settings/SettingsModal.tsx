@@ -6,9 +6,11 @@ import {
   ViewStyle,
   Button,
   Text,
+  ScrollView,
 } from "react-native";
 import { useGameContext } from "@/components/game/context";
 import * as GameTypes from "@/game/Game.types";
+import * as Clipboard from "expo-clipboard";
 
 export interface SettingsModalProps {
   style?: StyleProp<ViewStyle>;
@@ -47,7 +49,8 @@ export default function SettingsModal(
     [props.style]
   );
 
-  const { levelSettings, handleAction, level } = useGameContext();
+  const { levelSettings, handleAction, level, reset, getTestProps } =
+    useGameContext();
 
   const withUpdateSettings = React.useCallback(
     (settings: Partial<GameTypes.Settings>) => {
@@ -62,12 +65,22 @@ export default function SettingsModal(
     [handleAction, level]
   );
 
+  const copyTestProps = React.useCallback(async () => {
+    const testProps = getTestProps();
+
+    const string = JSON.stringify(testProps, null, 2);
+
+    console.log("Test Props:", string);
+
+    await Clipboard.setStringAsync(string);
+  }, [getTestProps]);
+
   if (!props.visible) {
     return null;
   }
 
   return (
-    <View style={style}>
+    <ScrollView style={style} contentContainerStyle={styles.containerStyle}>
       <View style={styles.content}>
         <View style={styles.close}>
           <Button title="Close" onPress={props.onRequestClose} />
@@ -176,9 +189,26 @@ export default function SettingsModal(
           onIncrement={() => {}}
           onDecrement={() => {}}
         />
-        <Button title="Regenerate Level" />
+        <View style={styles.button}>
+          <Button title="Regenerate Game" onPress={() => reset("init")} />
+        </View>
+        <View style={styles.button}>
+          <Button title="Reset Game" onPress={() => reset("reset-game")} />
+        </View>
+        <View style={styles.button}>
+          <Button
+            title="Regenerate Level"
+            onPress={() => reset("regenerate-level")}
+          />
+        </View>
+        <View style={styles.button}>
+          <Button title="Reset Level" onPress={() => reset("reset-level")} />
+        </View>
+        <View style={styles.button}>
+          <Button title="Copy Test Props" onPress={copyTestProps} />
+        </View>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -192,8 +222,11 @@ const styles = StyleSheet.create({
     bottom: 0,
     zIndex: 9999,
     backgroundColor: "rgba(0, 0, 0, 0.75)",
+  },
+  containerStyle: {
     justifyContent: "center",
     alignItems: "center",
+    minHeight: "100%",
   },
   content: {
     maxWidth: 500,
@@ -220,5 +253,8 @@ const styles = StyleSheet.create({
   close: {
     alignItems: "flex-end",
     marginBottom: 20,
+  },
+  button: {
+    marginTop: 10,
   },
 });

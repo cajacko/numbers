@@ -71,7 +71,10 @@ export type EditLevelSettings = {
 
 export type Action =
   | RegularAction
-  | { type: "reset" | "init"; seed: string }
+  | { type: "init"; seed: string }
+  | { type: "reset-game"; state: GameState }
+  | { type: "reset-level"; state: GameState }
+  | { type: "regenerate-level"; state: GameState; seed: string }
   | EditAction
   | EditLevelSettings;
 

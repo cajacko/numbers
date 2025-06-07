@@ -58,7 +58,9 @@ export type GameContext = {
       animationDuration?: number;
     }
   ) => void;
-  reset: () => void;
+  reset: (
+    type: "init" | "reset-level" | "reset-game" | "regenerate-level"
+  ) => void;
   score: SharedValue<number | null>;
   status: GameTypes.Status;
   level: number;

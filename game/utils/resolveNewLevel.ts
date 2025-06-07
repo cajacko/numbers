@@ -11,14 +11,16 @@ export default function resolveNewLevel({
   rand,
   state,
   level,
+  seed,
 }: {
   state: Types.GameState;
   rand: Types.Rand;
   exitedTiles: Types.Tile[];
   level: number;
+  seed?: string;
 }): Types.GameState {
   let nextState: Types.GameState = {
-    seed: state.seed,
+    seed: seed ?? state.seed,
     tiles: [],
     score: state.score,
     status: "user-turn",

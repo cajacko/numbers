@@ -5,26 +5,13 @@ import { Button, Dimensions, StyleSheet, Text, View } from "react-native";
 import Number from "@/components/game/Number";
 import { useSharedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import * as Clipboard from "expo-clipboard";
 import SettingsModal from "@/components/game/settings/SettingsModal";
 
-export interface GameProps {}
-
-function ConnectedGame(props: GameProps): React.ReactNode {
+function ConnectedGame(): React.ReactNode {
   const [editMode, setEditMode] = React.useState(false);
-  const { score, getTestProps, status, level, reset } = useGameContext();
+  const { score, status, level } = useGameContext();
   const scoreColor = useSharedValue<string | null>("white");
   const insets = useSafeAreaInsets();
-
-  const copyTestProps = React.useCallback(async () => {
-    const testProps = getTestProps();
-
-    const string = JSON.stringify(testProps, null, 2);
-
-    console.log("Test Props:", string);
-
-    await Clipboard.setStringAsync(string);
-  }, [getTestProps]);
 
   const [size, setSize] = React.useState<{
     width: number;
@@ -113,17 +100,6 @@ function ConnectedGame(props: GameProps): React.ReactNode {
 
         <View style={footerStyle}>
           <View style={styles.reset}>
-            <Button title="Copy Test Props" onPress={copyTestProps} />
-          </View>
-          {/* <View style={styles.reset}>
-            <Button title="Settings" onPress={openSettings} />
-          </View> */}
-          {reset && (
-            <View style={styles.reset}>
-              <Button title="Restart Game" onPress={reset} />
-            </View>
-          )}
-          <View style={styles.reset}>
             <Button
               title={editMode ? "Switch to Play" : "Switch to Edit"}
               onPress={() => setEditMode(!editMode)}
@@ -138,10 +114,10 @@ function ConnectedGame(props: GameProps): React.ReactNode {
   );
 }
 
-export default function Game(props: GameProps): React.ReactNode {
+export default function Game(): React.ReactNode {
   return (
     <GameProvider>
-      <ConnectedGame {...props} />
+      <ConnectedGame />
     </GameProvider>
   );
 }
