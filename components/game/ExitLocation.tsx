@@ -58,7 +58,7 @@ export default function ExitLocation({
         break;
       case "right":
         positionStyle = {
-          left: rows * tileSize.value + EXIT_LOCATION_OFFSET,
+          left: columns * tileSize.value + EXIT_LOCATION_OFFSET,
           top: offset + EXIT_LOCATION_OFFSET,
         };
         break;
