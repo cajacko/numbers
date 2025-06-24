@@ -5,6 +5,7 @@ import getTestPropsFromState from "@/game/utils/getTestPropsFromState";
 import getLevelSettings from "@/game/utils/getLevelSettings";
 import useVibrate from "@/hooks/useVibrate";
 import { generateSeed } from "@/utils/withRand";
+import { saveGameState } from "@/utils/gameStateStorage";
 import React from "react";
 import { runOnJS, useSharedValue, withTiming } from "react-native-reanimated";
 import Context, {
@@ -19,7 +20,10 @@ import getCollapsingFromDirection from "./getCollapsingFromDirection";
 const duration = 300;
 const pendingDuration = duration / 2;
 
-export function GameProvider(props: { children: React.ReactNode }) {
+export function GameProvider(props: {
+  children: React.ReactNode;
+  initialState?: GameTypes.GameState | null;
+}) {
   const { vibrate } = useVibrate();
   const [game] = React.useState<GameTypes.GameConfig>(defaultGame);
 
@@ -31,11 +35,25 @@ export function GameProvider(props: { children: React.ReactNode }) {
     Record<GameTypes.TileId, OverlayTileSubscriber>
   >({});
 
+  const saveTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const queueSave = React.useCallback((state: GameTypes.GameState) => {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    saveTimeoutRef.current = setTimeout(() => {
+      saveTimeoutRef.current = null;
+      saveGameState(state).catch(() => {});
+    }, 500);
+  }, []);
+
   const currentStateRef = React.useRef(
-    game.applyAction({
-      type: "init",
-      seed: generateSeed(),
-    })
+    props.initialState ??
+      game.applyAction({
+        type: "init",
+        seed: generateSeed(),
+      })
   );
 
   const [settings, setSettings] = React.useState<GameTypes.Settings>(
@@ -178,6 +196,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
         nextStateRef.current = null;
 
         setAllToCurrentState();
+        queueSave(currentStateRef.current);
 
         if (currentStateRef.current.status === "ai-turn") {
           pendingActions.current = [];
@@ -362,6 +381,7 @@ export function GameProvider(props: { children: React.ReactNode }) {
       getTile,
       animationProgress,
       setAllToCurrentState,
+      queueSave,
       vibrate,
       score,
       getOverlayTile,
@@ -404,8 +424,9 @@ export function GameProvider(props: { children: React.ReactNode }) {
       score.value = currentStateRef.current.score;
 
       setAllToCurrentState();
+      queueSave(currentStateRef.current);
     },
-    [game, setAllToCurrentState, score]
+    [game, setAllToCurrentState, score, queueSave]
   );
 
   const init = React.useRef(true);
@@ -419,6 +440,18 @@ export function GameProvider(props: { children: React.ReactNode }) {
 
     reset("init");
   }, [game, reset]);
+
+  React.useEffect(() => {
+    queueSave(currentStateRef.current);
+
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+
+      saveGameState(currentStateRef.current).catch(() => {});
+    };
+  }, [queueSave]);
 
   const getTestProps = React.useCallback<GameContext["getTestProps"]>(() => {
     return {

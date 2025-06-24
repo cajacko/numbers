@@ -6,6 +6,8 @@ import Number from "@/components/game/Number";
 import { useSharedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import SettingsModal from "@/components/game/settings/SettingsModal";
+import { loadGameState } from "@/utils/gameStateStorage";
+import * as GameTypes from "@/game/Game.types";
 
 function ConnectedGame(): React.ReactNode {
   const [editMode, setEditMode] = React.useState(false);
@@ -115,8 +117,26 @@ function ConnectedGame(): React.ReactNode {
 }
 
 export default function Game(): React.ReactNode {
+  const [initialState, setInitialState] = React.useState<
+    GameTypes.GameState | null | undefined
+  >(undefined);
+
+  React.useEffect(() => {
+    loadGameState().then((state) => {
+      setInitialState(state);
+    });
+  }, []);
+
+  if (initialState === undefined) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.text}>Loading...</Text>
+      </View>
+    );
+  }
+
   return (
-    <GameProvider>
+    <GameProvider initialState={initialState ?? undefined}>
       <ConnectedGame />
     </GameProvider>
   );
