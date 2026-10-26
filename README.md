@@ -1,3 +1,12 @@
+> [!IMPORTANT]
+> **This project has moved on.** The game lives on as **Doubleton**, a Godot rebuild:
+> [cajacko/doubleton](https://github.com/cajacko/doubleton), whose
+> [`docs/history.md`](https://github.com/cajacko/doubleton/blob/main/docs/history.md)
+> explains how it got there from this repo. Doubleton's repository is private, so those
+> links only open for people with access to it.
+>
+> This repo is archived and kept for reference only. No further work happens here.
+
 # Welcome to your Expo app 👋
 
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
